@@ -1,0 +1,17 @@
+root_help = "AirISP 是一个 Flash 烧录工具"
+
+port_help = "串口号"
+
+chip_help = "芯片型号"
+
+baud_help = "波特率"
+
+trace_help = "是否打印调试信息"
+
+connect_attempts_help = "最大重试次数，等于0表示无限次"
+
+before_help = "烧录前执行的操作"
+
+after_help = "烧录后执行的操作"
+
+peripheral_help = "烧录使用的外设"
