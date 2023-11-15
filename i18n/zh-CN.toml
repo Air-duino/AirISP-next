@@ -15,3 +15,13 @@ before_help = "烧录前执行的操作"
 after_help = "烧录后执行的操作"
 
 peripheral_help = "烧录使用的外设"
+
+write_flash_help = "烧录 Flash"
+
+write_flash_erase_help = "是否擦除全片"
+
+no_progress_help = "不显示进度条"
+
+write_flash_address_help = "烧录地址"
+
+write_flash_file_path_help = "烧录的文件路径"

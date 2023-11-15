@@ -11,4 +11,9 @@ pub struct Strings {
     pub before_help: String,
     pub after_help: String,
     pub peripheral_help: String,
+    pub write_flash_help: String,
+    pub write_flash_erase_help: String,
+    pub no_progress_help: String,
+    pub write_flash_address_help: String,
+    pub write_flash_file_path_help: String,
 }
