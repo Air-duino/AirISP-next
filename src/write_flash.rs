@@ -10,7 +10,10 @@ pub fn command() -> Command
         .short('e')
         .long("erase-all")
         .help(t!("write_flash_erase_help"))
-        .value_parser(value_parser!{ bool })
+        .value_parser(value_parser!(bool))
+        .num_args(0..=1)
+        .require_equals(true)
+        .default_missing_value("true")
         .default_value("false");
 
     let no_progress = Arg::new("no-progress")
@@ -83,11 +86,16 @@ impl WriteFlash {
         use crate::instantiate_peripheral;
         let mut p  = instantiate_peripheral!(air_isp);
         let mut bin = Vec::new();
-        air_isp.read_file(&self.file_path, &mut bin)?;
+        air_isp.read_file(&self.file_path,&mut self.address ,&mut bin)?;
 
         p.reset_bootloader().unwrap();
-        p.write_flash(self.address, &bin, AirISP::Progress::Percent).unwrap();
 
+        if self.erase {
+            p.erase_all().unwrap();
+        }
+
+        p.write_flash(self.address, &bin, AirISP::Progress::Percent).unwrap();
+        p.reset_app().unwrap();
         Ok(())
     }
 }

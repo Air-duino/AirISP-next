@@ -6,10 +6,13 @@ use rust_i18n::t;
 use serialport::{available_ports, SerialPort, SerialPortType};
 use std::error::Error;
 use std::ffi::c_float;
+use std::fmt::format;
 use std::io::{Read, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
+use crossterm::ExecutableCommand;
+use crossterm::terminal::ClearType;
 use tokio::runtime::Runtime;
 use tokio::time::sleep;
 
@@ -22,6 +25,7 @@ enum Command {
     ReadMemory = 0x11,
     Go = 0x21,
     WriteMemory = 0x31,
+    Erase = 0x43,
     ExtendedErase = 0x44,
     WriteProtect = 0x63,
     WriteUnprotect = 0x73,
@@ -33,6 +37,13 @@ enum Command {
 enum Ack {
     Ack = 0x79,
     Nack = 0x1F,
+}
+
+#[repr(u16)]
+enum ExtendedErase {
+    EraseAll = 0xFFFF,
+    Storage0 = 0xFFFE,
+    Storage1 = 0xFFFD,
 }
 
 pub struct GeneralUart<'a> {
@@ -62,7 +73,7 @@ impl GeneralUart<'_> {
                 "{}",
                 t!("open_serial_success_help", "TTY" => air_isp.get_port())
             )
-            .green()
+                .green()
         );
 
         GeneralUart {
@@ -97,16 +108,24 @@ impl Pp for GeneralUart<'_> {
         data: &[u8],
         progress: AirISP::Progress,
     ) -> Result<(), Box<dyn Error>> {
-        let cmd = [Command::WriteMemory as u8, !(Command::WriteMemory as u8)];
+        println!("{}",
+                 format!("{}", t!("write_flash_file_help")).bright_blue()
+        );
+        let now_time = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis();
+
         // 一次最多写255个字节
         for i in (0..data.len()).step_by(256) {
+            let cmd = [Command::WriteMemory as u8, !(Command::WriteMemory as u8)];
             let mut data_len = 256;
             if i + 256 > data.len() {
                 data_len = data.len() - i;
             }
             data_len += 2; // 加上数据大小和校验位
             let mut data_buf = vec![0u8; data_len];
-            data_buf[0] = (data_len - 3) as u8;
+            let real_data_len = data_len - 3; // 真实数据长度
+            data_buf[0] = real_data_len as u8;
             data_buf[data_len - 1] = data_buf[0];
             for j in 0..data_len - 2 {
                 data_buf[j + 1] = data[i + j];
@@ -130,23 +149,44 @@ impl Pp for GeneralUart<'_> {
             self.handle.write(&data_buf)?;
             self.get_ack()?;
             // 打印进度条
-            if progress == AirISP::Progress::Percent {
-                let percent = (i as c_float / data.len() as c_float) * 100.0;
-                println!(
-                    "{}",
-                    format!(
+            match progress {
+                AirISP::Progress::Percent => {
+                    // 百分比应当算上已经发送的数据
+                    let percent = (i + real_data_len + 1) as f32 / data.len() as f32 * 100.0;
+                    // 清除当前行
+                    print!("\r\r");
+                    print!(
                         "{}",
-                        t!("write_flash_file_percent",
-                            "percent" => format!("{:.2}", percent),
-                            //16进制地址
-                            "addr" => format!("{:#010x}", address + i as u32)
-                        )
-                        .bright_blue()
+                        format!(
+                            "{}",
+                            t!("write_flash_file_percent",
+                    "percent" => format!("{:.2}", percent),
+                    //16进制地址
+                    "addr" => format!("{:#010x}", address + i as u32 )
                     )
-                );
-                std::io::stdout().flush().unwrap();
+                        ).bright_blue()
+                    );
+                    std::io::stdout().flush().unwrap();
+                }
+                AirISP::Progress::None | _ => {
+                    // 不打印进度条
+                }
             }
         }
+
+        println!();
+        println!("{}",
+                 format!("{}",
+                         t!("write_flash_success_help",
+                       "time" => format!("{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
+                           .unwrap()
+                           .as_millis() - now_time),
+                        "addr" => format!("{:#010x}", address as u32),
+                        "size" => format!("{}", data.len())
+                    )).bright_white()
+        );
+        println!();
+
         Ok(())
     }
 
@@ -286,7 +326,7 @@ impl Pp for GeneralUart<'_> {
         println!(""); // 换行
 
         // 读取Chip ID
-        let retry = 5;
+        let retry = 3;
         for i in 0..retry {
             match self.get_chip_id() {
                 Ok(_) => {
@@ -303,12 +343,85 @@ impl Pp for GeneralUart<'_> {
                     //这个字节可能是0x7F或者0xFD等，暂时还没找到什么规律。但是正因为串入了这个字节，因此mcu接收到的第一个字节就不是我们发送的用来握手的0x7F，
                     //这样后续的整个指令将会完全乱掉，因此我们额外添加了一个字节去处理，假如GetID操作失败的话，很有可能就是因为发送的指令乱掉了，那么我们手动
                     //加入一个字节来补全，并尝试重试3次。
+                    // 也许在RUST中我们可以去掉（逃
                     let data = [0x7F as u8];
                     self.handle.write(&data).unwrap();
                     std::thread::sleep(Duration::from_millis(5));
                     // 取出串口缓冲区的数据
                     self.handle.clear(serialport::ClearBuffer::All).unwrap();
                 }
+            }
+        }
+
+        Ok(())
+    }
+
+    fn erase_all(&mut self) -> Result<(), Box<dyn Error>>
+    {
+        println!("{}",
+                 format!("{}", t!("erase_all_help")).bright_blue()
+        );
+        let now_time = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis();
+
+        let cmd = [Command::ExtendedErase as u8, !(Command::ExtendedErase as u8)];
+        self.handle.write(&cmd)?;
+        self.get_ack()?;
+
+        let mut data_buf = vec![0u8; 3];
+        data_buf[0] = (ExtendedErase::EraseAll as u16 >> 8) as u8;
+        data_buf[1] = ExtendedErase::EraseAll as u16 as u8;
+        data_buf[2] = data_buf[0] - data_buf[1];
+
+        self.handle.write(&data_buf)?;
+        match self.get_ack() {
+            Ok(_) => {
+                let run_time = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_millis() - now_time;
+                println!("{}", format!("{}",
+                                       t!("erase_all_success_help",
+                                        "time" => format!("{}", run_time)
+                                       )).green());
+            }
+            Err(_) => {
+                println!("{}", format!("{}", t!("erase_all_fail_help")).red());
+            }
+        }
+
+        Ok(())
+    }
+
+    fn reset_app(&mut self) -> Result<(), Box<dyn Error>> {
+        println!("{}",
+                 format!("{}", t!("leaving_help")).white()
+        );
+        match self.air_isp.get_after().as_str() {
+            // 硬件复位
+            "hard_reset" => {
+                match self.air_isp.get_before().as_str() {
+                    // 使用异或电路
+                    "direct_connect" => {
+                        self.handle.write_request_to_send(true).unwrap();
+                        self.handle.write_data_terminal_ready(true).unwrap();
+                        std::thread::sleep(Duration::from_millis(20));
+                        self.handle.write_request_to_send(false).unwrap();
+                    },
+                    "default_reset" | _ => {
+                        self.handle.write_request_to_send(true).unwrap();
+
+                        std::thread::sleep(Duration::from_millis(20));
+                        self.handle.write_request_to_send(false).unwrap();
+                    }
+                }
+
+                println!("{}",
+                         format!("{}", t!("leaving_hard_reset_help")).white()
+                );
+            },
+            _ => {
+                todo!()
             }
         }
 

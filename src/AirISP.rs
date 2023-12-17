@@ -8,6 +8,7 @@ use crate::peripheral::Pp;
 use std::path::Path;
 use std::string::String;
 
+#[derive(PartialEq)]
 pub enum Progress {
     None,
     Bar,
@@ -84,6 +85,13 @@ pub fn air_isp() -> Command
         .value_parser(["Uart", "swd"])
         .default_value("Uart");
 
+    let language = Arg::new("language")
+        .global(true)
+        .long("language")
+        .help(t!("language_help"))
+        .value_parser(["auto", "en", "zh-CN", "ja"])
+        .default_value("auto");
+
     let styles = styling::Styles::styled()
         .header(styling::AnsiColor::Green.on_default() | styling::Effects::BOLD)
         .usage(styling::AnsiColor::Green.on_default() | styling::Effects::BOLD)
@@ -106,6 +114,7 @@ pub fn air_isp() -> Command
         .arg(before)
         .arg(after)
         .arg(peripheral)
+        .arg(language)
         .subcommand(write_flash::command())
         .subcommand(get::chip_id_command())
 }
@@ -118,6 +127,7 @@ pub struct AirISP {
     connect_attempts: u32,
     before: String,
     after: String,
+    language: String,
 
     peripheral: Peripheral,
 }
@@ -137,6 +147,7 @@ impl AirISP
             connect_attempts: *matches.get_one::<u32>("connect_attempts").unwrap(),
             before: matches.get_one::<String>("before").unwrap().to_string(),
             after: matches.get_one::<String>("after").unwrap().to_string(),
+            language: matches.get_one::<String>("language").unwrap().to_string(),
             peripheral: pp,
         }
     }
@@ -174,7 +185,12 @@ impl AirISP
         self.after.clone()
     }
 
-    pub fn read_file(&self, file_path: &str, bin: &mut Vec<u8>) -> Result<(), Box<dyn Error>>
+    pub fn get_language(&self) -> String
+    {
+        self.language.clone()
+    }
+
+    pub fn read_file(&self, file_path: &str, address: &mut u32, bin: &mut Vec<u8>) -> Result<(), Box<dyn Error>>
     {
         // 判断文件后缀是.hex还是.bin
         let mut file = std::fs::File::open(file_path).unwrap();
@@ -190,7 +206,7 @@ impl AirISP
             "hex" => {
                 let mut hex = String::from("");
                 file.read_to_string(&mut hex).unwrap();
-                self.hex_to_bin(hex, &mut b).unwrap();
+                self.hex_to_bin(hex, address, &mut b).unwrap();
             }
             "bin" | _ => {
                 file.read_to_end(&mut b).unwrap();
@@ -200,16 +216,24 @@ impl AirISP
         Ok(())
     }
 
+    /// 如果是
+    pub fn read_real_address(&mut self, address: &mut u32) -> Result<(), Box<dyn Error>>
+    {
+
+        Ok(())
+    }
+
 
     /// 将 Intel Hex 格式的字符串转换为二进制数据
     ///
     /// # 参数
     /// * `hex` - Intel Hex 格式的字符串
+    /// * `address` - 起始地址
     /// * `bin` - 要填充的二进制数据向量
     ///
     /// # 返回值
     /// 如果成功，返回 Ok(())；如果失败，返回错误信息
-    pub fn hex_to_bin(&self, hex: String, bin: &mut Vec<u8>) -> Result<(), Box<dyn Error>> {
+    pub fn hex_to_bin(&self, hex: String,address: &mut u32, bin: &mut Vec<u8>) -> Result<(), Box<dyn Error>> {
         let mut start_address = String::from("-1");
         let mut current_address = 0;
 
@@ -243,6 +267,7 @@ impl AirISP
                     // 获取高16位地址并更新起始地址
                     let high_address = &hex_line[8..12];
                     start_address = format!("0x{}0000", high_address);
+                    *address = u32::from_str_radix(&start_address[2..], 16)?;
                     current_address = 0;
                 },
                 _ => { // 其他记录类型
@@ -250,7 +275,6 @@ impl AirISP
                 }
             }
         }
-
         Ok(())
     }
 }

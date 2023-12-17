@@ -28,4 +28,10 @@ impl Pp for Swd<'_> {
     fn get_chip_id(&mut self) -> Result<(), Box<dyn Error>> {
         todo!()
     }
+    fn erase_all(&mut self) -> Result<(), Box<dyn Error>> {
+        todo!()
+    }
+    fn reset_app(&mut self) -> Result<(), Box<dyn Error>> {
+        todo!()
+    }
 }

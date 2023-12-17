@@ -10,7 +10,13 @@ pub trait Pp {
     /// 重启到bootloader
     fn reset_bootloader(&mut self) -> Result<(), Box<dyn Error>>;
 
+    /// 重启到APP
+    fn reset_app(&mut self) -> Result<(), Box<dyn Error>>;
+
     /// 获取芯片ID
     fn get_chip_id(&mut self) -> Result<(), Box<dyn Error>>;
+
+    /// 擦除全片
+    fn erase_all(&mut self) -> Result<(), Box<dyn Error>>;
 }
 
