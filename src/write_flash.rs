@@ -1,39 +1,42 @@
 use std::error::Error;
 use clap::{Arg, ColorChoice, Command, value_parser};
-use crate::language;
+use clap::ArgMatches;
+use crate::{AirISP, peripheral};
+use rust_i18n::t;
 
-pub(crate) fn command(lang:&language::Strings) -> Command
+pub fn command() -> Command
 {
     let erase = Arg::new("erase-all")
         .short('e')
         .long("erase-all")
-        .help(lang.write_flash_erase_help.clone())
-        .value_parser(value_parser!(bool))
-        .num_args(0..=1)
-        .require_equals(true)
-        .default_missing_value("true");
+        .help(t!("write_flash_erase_help"))
+        .value_parser(value_parser!{ bool })
+        .default_value("false");
 
     let no_progress = Arg::new("no-progress")
         .long("no-progress")
-        .help(lang.no_progress_help.clone())
+        .help(t!("no_progress_help"))
         .value_parser(value_parser!(bool))
         .num_args(0..=1)
         .require_equals(true)
-        .default_missing_value("true");
+        .default_missing_value("true")
+        .default_value("false");
 
     let address = Arg::new("address")
+        .id("address")
         .index(1)
         .required(true)
-        .help(lang.write_flash_address_help.clone());
+        .help(t!("write_flash_address_help"));
 
     let file_path = Arg::new("path")
+        .id("path")
         .index(2)
         .required(true)
-        .help(lang.write_flash_file_path_help.clone());
+        .help(t!("write_flash_file_path_help"));
 
 
     Command::new("write_flash")
-        .about(lang.write_flash_help.clone())
+        .about(t!("write_flash_help"))
         .color(ColorChoice::Auto)
         .arg(erase)
         .arg(no_progress)
@@ -42,8 +45,49 @@ pub(crate) fn command(lang:&language::Strings) -> Command
 
 }
 
-pub fn run(matches: &clap::ArgMatches) -> Result<(), Box<dyn Error>>
-{
+pub struct WriteFlash {
+    address: u32,
+    file_path: String,
+    erase: bool,
+    progress: AirISP::Progress,
+    air_isp: AirISP::AirISP,
+}
 
-    Ok(())
+impl WriteFlash {
+    pub fn new(matches: &ArgMatches, air_isp: AirISP::AirISP) -> WriteFlash
+    {
+        let address = matches.get_one::<String>("address").unwrap().to_string();
+        let address = if address.starts_with("0x") || address.starts_with("0X") {
+            u32::from_str_radix(&address[2..], 16).unwrap()
+        } else {
+            address.parse::<u32>().unwrap()
+        };
+
+        WriteFlash {
+            address: address,
+            file_path: matches.get_one::<String>("path").unwrap().to_string(),
+            erase: *matches.get_one::<bool>("erase-all").unwrap(),
+            progress: if *matches.get_one::<bool>("no-progress").unwrap() {
+                AirISP::Progress::None
+            } else {
+                AirISP::Progress::Percent
+            },
+
+            air_isp: air_isp,
+        }
+    }
+
+    pub fn run(&mut self) -> Result<(), Box<dyn Error>>
+    {
+        let air_isp = &self.air_isp;
+        use crate::instantiate_peripheral;
+        let mut p  = instantiate_peripheral!(air_isp);
+        let mut bin = Vec::new();
+        air_isp.read_file(&self.file_path, &mut bin)?;
+
+        p.reset_bootloader().unwrap();
+        p.write_flash(self.address, &bin, AirISP::Progress::Percent).unwrap();
+
+        Ok(())
+    }
 }

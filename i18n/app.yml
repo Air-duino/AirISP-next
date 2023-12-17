@@ -1,0 +1,66 @@
+_version: 2
+root_help:
+  zh-CN: "AirISP 是一个 Flash 烧录工具"
+
+port_help:
+  zh-CN: "串口号"
+
+chip_help:
+  zh-CN: "芯片型号"
+
+baud_help:
+  zh-CN: "波特率"
+
+trace_help:
+  zh-CN: "是否打印调试信息"
+
+connect_attempts_help:
+  zh-CN: "最大重试次数，等于0表示无限次"
+
+before_help:
+  zh-CN: "烧录前执行的操作"
+
+after_help:
+  zh-CN: "烧录后执行的操作"
+
+peripheral_help:
+  zh-CN: "烧录使用的外设"
+
+write_flash_help:
+  zh-CN: "烧录 Flash"
+
+write_flash_erase_help:
+  zh-CN: "是否擦除全片"
+
+no_progress_help:
+  zh-CN: "不显示进度条"
+
+write_flash_address_help:
+  zh-CN: "烧录地址"
+
+write_flash_file_path_help:
+  zh-CN: "烧录的文件路径"
+
+write_flash_file_percent:
+  zh-CN: "正在写入地址: %{addr}……已完成: %{percent}%"
+
+open_serial_fail_help:
+  zh-CN: "打开串口 %{TTY} 失败"
+
+open_serial_success_help:
+    zh-CN: "正在打开串口 %{TTY} ……"
+
+connect_fail_help:
+  zh-CN: "自动进入boot模式失败，操作超时，结束操作...\n你可以尝试手动进入boot模式：\n拔掉USB、按住BOOT按键不要松开、插入USB，重新尝试下载操作。\n下载完成后，再松开松开BOOT按键，此时再按一下RST复位即可。"
+
+connect_help:
+  zh-CN: "连接中"
+
+get_chip_success_help:
+  zh-CN: "芯片ID为: %{chip_id}"
+
+get_chip_fail_help:
+  zh-CN: "获取芯片ID失败"
+
+chip_id_help:
+  zh-CN: "获取芯片ID"

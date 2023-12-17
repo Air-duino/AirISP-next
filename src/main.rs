@@ -1,113 +1,51 @@
-mod language;
-mod file_embed;
 mod write_flash;
 mod peripheral;
 mod AirISP;
+mod get;
+
+use rust_i18n::t;
+use colored::*;
+
+rust_i18n::i18n!("i18n");
 
 use clap::error::Error;
 use clap::{Arg, ArgAction, ArgMatches, Args, ColorChoice, Command, command, FromArgMatches, Parser, value_parser};
 use clap::builder::{styling, ValueParser};
-use toml::Value;
 
-fn air_isp(lang:&language::Strings) -> Command
-{
-    let port = Arg::new("port")
-        .global(true)
-        .short('p')
-        .long("port")
-        .help(lang.port_help.clone())
-        .required(false);
+fn set_language() {
+    let language = whoami::lang().collect::<Vec<String>>();
+    let language = language[0].as_str().to_owned();
+    let i18n_list = rust_i18n::available_locales!();
 
-    let chip = Arg::new("chip")
-        .global(true)
-        .short('c')
-        .long("chip")
-        .help(lang.chip_help.clone())
-        .value_parser(["auto", "air001","air32"])
-        .default_value("auto");
-
-    let baud = Arg::new("baud")
-        .global(true)
-        .short('b')
-        .long("baud")
-        .help(lang.baud_help.clone())
-        .value_parser(value_parser!{ u32 })
-        .default_value("115200");
-
-    let trace = Arg::new("trace")
-        .global(true)
-        .short('t')
-        .long("trace")
-        .help(lang.trace_help.clone())
-        .value_parser(value_parser!{ bool })
-        .default_value("false");
-
-    let connect_attempts = Arg::new("connect_attempts")
-        .global(true)
-        .long("connect-attempts")
-        .help(lang.connect_attempts_help.clone())
-        .value_parser(value_parser!{ u32 })
-        .default_value("10");
-
-    let before = Arg::new("before")
-        .global(true)
-        .long("before")
-        .help(lang.before_help.clone())
-        .value_parser(["direct_connect", "default_reset"])
-        .default_value("default_reset");
-
-    let after = Arg::new("after")
-        .global(true)
-        .long("after")
-        .help(lang.after_help.clone())
-        .value_parser(["hard_reset"])
-        .default_value("hard_reset");
-
-    let peripheral = Arg::new("peripheral")
-        .global(true)
-        .long("peripheral")
-        .help(lang.peripheral_help.clone())
-        .value_parser(["uart", "swd"])
-        .default_value("uart");
-
-    let styles = styling::Styles::styled()
-        .header(styling::AnsiColor::Green.on_default() | styling::Effects::BOLD)
-        .usage(styling::AnsiColor::Green.on_default() | styling::Effects::BOLD)
-        .literal(styling::AnsiColor::Blue.on_default() | styling::Effects::BOLD)
-        .placeholder(styling::AnsiColor::Cyan.on_default());
-
-    Command::new("AirISP")
-        .about(lang.root_help.clone())
-        .color(ColorChoice::Auto)
-        .styles(styles)
-        .subcommand_required(true)
-        .arg_required_else_help(true)
-        .allow_external_subcommands(true)
-        .version(env!("CARGO_PKG_VERSION"))
-        .arg(port)
-        .arg(chip)
-        .arg(baud)
-        .arg(trace)
-        .arg(connect_attempts)
-        .arg(before)
-        .arg(after)
-        .arg(peripheral)
-        .subcommand(write_flash::command(lang))
+    // 不支持的语言默认使用英语
+    if !i18n_list.contains(&language.as_str()) {
+        println!("{}","Language not supported");
+        rust_i18n::set_locale("en");
+    }
+    else {
+        rust_i18n::set_locale(&language);
+    }
 }
 
-
 fn main() {
+    set_language();
+    let matches = AirISP::air_isp().get_matches();
 
-    let my_string : language::Strings = toml::from_str(&*file_embed::get_i18n()).unwrap();
+    let air_isp = AirISP::AirISP::new(&matches);
 
-    let matches = air_isp(&my_string).get_matches();
-
-    AirISP::AirISP::new(matches.clone());
+    // 打印版本号
+    println!("{}", format!("AirISP version: {}", env!("CARGO_PKG_VERSION")).blue());
     
     match matches.subcommand() {
         Some(("write_flash", sub_m)) => {
-            write_flash::run(sub_m).unwrap();
-        }
+            let mut wf = write_flash::WriteFlash::new(&sub_m, air_isp);
+            wf.run().unwrap();
+        },
+        Some(("chip_id", sub_m)) => {
+            let mut get = get::Get::new(&sub_m, air_isp);
+            get.chip_id().unwrap();
+
+        },
         _ => {
             println!("no subcommand");
         }
