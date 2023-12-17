@@ -1,66 +1,145 @@
 _version: 2
 root_help:
   zh-CN: "AirISP 是一个 Flash 烧录工具"
+  en: "AirISP is a Flash programming tool"
+  ja: "AirISP はフラッシュプログラミングツールです"
 
 port_help:
   zh-CN: "串口号"
+  en: "Serial port number"
+  ja: "シリアルポート番号"
 
 chip_help:
   zh-CN: "芯片型号"
+  en: "Chip model"
+  ja: "チップモデル"
 
 baud_help:
   zh-CN: "波特率"
+  en: "Baud rate"
+  ja: "ボーレート"
 
 trace_help:
   zh-CN: "是否打印调试信息"
+  en: "Whether to print debugging information"
+  ja: "デバッグ情報を印刷するかどうか"
 
 connect_attempts_help:
   zh-CN: "最大重试次数，等于0表示无限次"
+  en: "Maximum number of retries, 0 for unlimited"
+  ja: "最大再試行回数、0は無制限を意味します"
 
 before_help:
   zh-CN: "烧录前执行的操作"
+  en: "Operation to perform before programming"
+  ja: "プログラミング前に実行する操作"
 
 after_help:
   zh-CN: "烧录后执行的操作"
+  en: "Operation to perform after programming"
+  ja: "プログラミング後に実行する操作"
 
 peripheral_help:
   zh-CN: "烧录使用的外设"
+  en: "Peripheral used for programming"
+  ja: "プログラミングに使用される周辺機器"
 
 write_flash_help:
   zh-CN: "烧录 Flash"
+  en: "Program Flash"
+  ja: "フラッシュプログラム"
 
 write_flash_erase_help:
   zh-CN: "是否擦除全片"
+  en: "Whether to erase the entire chip"
+  ja: "チップ全体を消去するかどうか"
 
 no_progress_help:
   zh-CN: "不显示进度条"
+  en: "Do not show progress bar"
+  ja: "進行状況バーを表示しない"
 
 write_flash_address_help:
   zh-CN: "烧录地址"
+  en: "Programming address"
+  ja: "プログラミングアドレス"
 
 write_flash_file_path_help:
   zh-CN: "烧录的文件路径"
+  en: "Path of the file to be programmed"
+  ja: "プログラムされるファイルのパス"
+
+write_flash_file_help:
+  zh-CN: "正在烧录中……"
+  en: "Programming in progress…"
+  ja: "プログラミング中…"
 
 write_flash_file_percent:
-  zh-CN: "正在写入地址: %{addr}……已完成: %{percent}%"
+  zh-CN: "正在写入地址: %{addr}  已完成: %{percent}%"
+  en: "Writing to address: %{addr}  Completed: %{percent}%"
+  ja: "アドレス %{addr} に書き込み中: 完了 %{percent}%"
+
+write_flash_success_help:
+  zh-CN: "烧录成功！在地址 %{addr} 上写入了 %{size} byte 的数据，耗时 %{time} ms"
+  en: "Programming successful! Wrote %{size} bytes of data to address %{addr} in %{time} ms"
+  ja: "プログラミング成功！アドレス %{addr} に %{size} バイトのデータを %{time} ミリ秒で書き込みました"
 
 open_serial_fail_help:
   zh-CN: "打开串口 %{TTY} 失败"
+  en: "Failed to open serial port %{TTY}"
+  ja: "シリアルポート %{TTY} のオープンに失敗"
 
 open_serial_success_help:
-    zh-CN: "正在打开串口 %{TTY} ……"
+  zh-CN: "正在打开串口 %{TTY} ……"
+  en: "Opening serial port %{TTY} ……"
+  ja: "シリアルポート %{TTY} を開いています……"
 
 connect_fail_help:
   zh-CN: "自动进入boot模式失败，操作超时，结束操作...\n你可以尝试手动进入boot模式：\n拔掉USB、按住BOOT按键不要松开、插入USB，重新尝试下载操作。\n下载完成后，再松开松开BOOT按键，此时再按一下RST复位即可。"
+  en: "Failed to automatically enter boot mode, operation timed out, ending operation...\nYou can try to manually enter boot mode:\nUnplug USB, hold the BOOT button, plug in USB, and retry the download operation.\nAfter downloading, release the BOOT button and press RST to reset."
+  ja: "自動的にブートモードに入ることができず、操作がタイムアウトして終了します...\n手動でブートモードに入ることを試みることができます：\nUSBを抜いて、BOOTボタンを押し続けて、USBを差し込んで、ダウンロード操作を再試行します。\nダウンロードが完了したら、BOOTボタンを離して、RSTを押してリセットします。"
 
 connect_help:
   zh-CN: "连接中"
+  en: "Connecting"
+  ja: "接続中"
 
 get_chip_success_help:
   zh-CN: "芯片ID为: %{chip_id}"
+  en: "Chip ID is: %{chip_id}"
+  ja: "チップID: %{chip_id}"
 
 get_chip_fail_help:
   zh-CN: "获取芯片ID失败"
+  en: "Failed to get chip ID"
+  ja: "チップIDの取得に失敗"
 
 chip_id_help:
   zh-CN: "获取芯片ID"
+  en: "Get chip ID"
+  ja: "チップIDを取得"
+
+erase_all_help:
+  zh-CN: "正在擦除全片，请稍等……"
+  en: "Erasing the entire chip, please wait…"
+  ja: "チップ全体を消去しています、お待ちください……"
+
+erase_all_success_help:
+  zh-CN: "擦除成功！耗时 %{time} ms"
+  en: "Erase successful! Took %{time} ms"
+  ja: "消去成功！所要時間 %{time} ミリ秒"
+
+erase_all_fail_help:
+  zh-CN: "擦除失败，请重试"
+  en: "Erase failed, please retry"
+  ja: "消去に失敗しました、再試行してください"
+
+leaving_help:
+  zh-CN: "正在跳转到应用程序……"
+  en: "Jumping to application…"
+  ja: "アプリケーションにジャンプしています……"
+
+leaving_hard_reset_help:
+  zh-CN: "通过 RTS 硬件复位，如失败请尝试手动复位"
+  en: "Hard reset via RTS, if unsuccessful please try manual reset"
+  ja: "RTS経由でハードリセット、失敗した場合は手動リセットを試みてください"

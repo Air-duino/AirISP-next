@@ -1,17 +1,17 @@
 use crate::peripheral::Pp;
+use crate::AirISP;
+use crate::AirISP::air_isp;
+use colored::Colorize;
+use rust_i18n::t;
+use serialport::{available_ports, SerialPort, SerialPortType};
 use std::error::Error;
 use std::ffi::c_float;
-use std::time::Duration;
-use colored::Colorize;
-use serialport::{available_ports, SerialPort, SerialPortType};
-use crate::AirISP;
-use rust_i18n::t;
-use crate::AirISP::air_isp;
-use tokio::runtime::Runtime;
-use tokio::time::{sleep};
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::io::{Read, Write};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::runtime::Runtime;
+use tokio::time::sleep;
 
 #[repr(u8)]
 enum Command {
@@ -49,11 +49,21 @@ impl GeneralUart<'_> {
             .open()
             // 显示错误信息，并退出程序
             .unwrap_or_else(|e| {
-                eprintln!("{}", t!("open_serial_fail_help", "TTY" => air_isp.get_port(), "error" => e));
+                eprintln!(
+                    "{}",
+                    t!("open_serial_fail_help", "TTY" => air_isp.get_port(), "error" => e)
+                );
                 std::process::exit(1);
             });
 
-        println!("{}", format!("{}", t!("open_serial_success_help", "TTY" => air_isp.get_port())).green());
+        println!(
+            "{}",
+            format!(
+                "{}",
+                t!("open_serial_success_help", "TTY" => air_isp.get_port())
+            )
+            .green()
+        );
 
         GeneralUart {
             air_isp,
@@ -72,65 +82,69 @@ impl GeneralUart<'_> {
             Ok(())
         } else {
             self.handle.clear(serialport::ClearBuffer::All)?; // 清空缓冲区
-            Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "ack error")))
+            Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "ack error",
+            )))
         }
     }
 }
 
 impl Pp for GeneralUart<'_> {
-
-    fn write_flash(&mut self, address: u32, data: &[u8], progress: AirISP::Progress) -> Result<(), Box<dyn Error>> {
+    fn write_flash(
+        &mut self,
+        address: u32,
+        data: &[u8],
+        progress: AirISP::Progress,
+    ) -> Result<(), Box<dyn Error>> {
         let cmd = [Command::WriteMemory as u8, !(Command::WriteMemory as u8)];
-        // 一次最多写256个字节
-        for i in 0..data.len() / 256 {
-            let now_address = address + (i * 256) as u32;
-            let mut addr = [0u8; 5]; //小端模式
-            addr[0] = (now_address >> 24) as u8;
-            addr[1] = (now_address >> 16) as u8;
-            addr[2] = (now_address >> 8) as u8;
-            addr[3] = now_address as u8;
-            addr[4] = addr[0] ^ addr[1] ^ addr[2] ^ addr[3];            // 校验和
+        // 一次最多写255个字节
+        for i in (0..data.len()).step_by(256) {
+            let mut data_len = 256;
+            if i + 256 > data.len() {
+                data_len = data.len() - i;
+            }
+            data_len += 2; // 加上数据大小和校验位
+            let mut data_buf = vec![0u8; data_len];
+            data_buf[0] = (data_len - 3) as u8;
+            data_buf[data_len - 1] = data_buf[0];
+            for j in 0..data_len - 2 {
+                data_buf[j + 1] = data[i + j];
+                data_buf[data_len - 1] ^= data_buf[j + 1];
+            }
+            // 发送指令
             self.handle.write(&cmd)?;
             self.get_ack()?;
-            self.handle.write(&addr)?;
+
+            // 发送地址
+            let mut address_buf = vec![0u8; 5];
+            address_buf[0] = ((address + i as u32) >> 24) as u8;
+            address_buf[1] = ((address + i as u32) >> 16) as u8;
+            address_buf[2] = ((address + i as u32) >> 8) as u8;
+            address_buf[3] = (address + i as u32) as u8;
+            address_buf[4] = address_buf[0] ^ address_buf[1] ^ address_buf[2] ^ address_buf[3];
+            self.handle.write(&address_buf)?;
             self.get_ack()?;
 
-            // 发送需要写入的数据，最多256个字节，4个字节为一组
-            let mut data_len = data.len() - i * 256;
-            if data.len() % 4 != 0 {
-                data_len += 4 - data.len() % 4;
-            }
-            data_len += 1; // 此处加1是因为长度字节也要算进去，但是在后面的buf中是使用校验位作为最后一位
-            let mut data_buf = vec![0u8; data_len];
-            // 填充数据
-            for j in 0..data_len - 1 {
-                if j < data.len() {
-                    data_buf[j] = data[i * 256 + j];
-                } else {
-                    data_buf[j] = 0xFF;
-                }
-            }
-            // 计算校验和
-            for j in 0..data_len - 1 {
-                data_buf[data_len - 1] ^= data_buf[j];
-            }
-
-            let len = [data_len as u8];
-            self.handle.write(&len)?;
+            // 发送数据
             self.handle.write(&data_buf)?;
-            std::thread::sleep(Duration::from_millis(10));
             self.get_ack()?;
-
-            match progress {
-                AirISP::Progress::None => {}
-                AirISP::Progress::Percent => {
-                    let percent = (i * 256) as c_float / data.len() as c_float * 100.0;
-                    let addr = address + i as u32 * 256;
-                    println!("{}", t!("write_flash_file_percent","addr" => addr, "percent" => percent));
-                }
-                AirISP::Progress::Bar => {
-                    todo!()
-                }
+            // 打印进度条
+            if progress == AirISP::Progress::Percent {
+                let percent = (i as c_float / data.len() as c_float) * 100.0;
+                println!(
+                    "{}",
+                    format!(
+                        "{}",
+                        t!("write_flash_file_percent",
+                            "percent" => format!("{:.2}", percent),
+                            //16进制地址
+                            "addr" => format!("{:#010x}", address + i as u32)
+                        )
+                        .bright_blue()
+                    )
+                );
+                std::io::stdout().flush().unwrap();
             }
         }
         Ok(())
@@ -149,11 +163,17 @@ impl Pp for GeneralUart<'_> {
         let mut data_buf = vec![0u8; data_len + 1];
         self.handle.read(&mut data_buf)?;
 
-        let mut chip_id : String = Default::default() ;
+        let mut chip_id: String = Default::default();
         for i in 0..data_len {
             chip_id.push_str(&format!("{:#04x} ", data_buf[i]));
         }
-        println!("{}", format!("{}", t!("get_chip_success_help","chip_id" => chip_id).cyan()));
+        println!(
+            "{}",
+            format!(
+                "{}",
+                t!("get_chip_success_help","chip_id" => chip_id).cyan()
+            )
+        );
         Ok(())
     }
 
@@ -218,7 +238,7 @@ impl Pp for GeneralUart<'_> {
                         tokio::time::sleep(Duration::from_millis(5)).await;
 
                         self.handle.write_data_terminal_ready(false).unwrap();
-                    },
+                    }
                     // 使用直连电路
                     "direct_connect" => {
                         self.handle.write_data_terminal_ready(true).unwrap();
@@ -294,5 +314,4 @@ impl Pp for GeneralUart<'_> {
 
         Ok(())
     }
-
 }
