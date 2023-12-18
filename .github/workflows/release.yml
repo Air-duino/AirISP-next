@@ -82,14 +82,15 @@ jobs:
           mkdir -p ~/release
           if [[ ${{ matrix.target.name }} =~ "windows" ]]
           then
-            zip -j ~/release/AirISP-${{ matrix.target.file_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next.exe
+            zip -r ~/release/AirISP-${{ matrix.target.file_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next.exe
           else
-            zip -j ~/release/AirISP-${{ matrix.target.file_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next
+            zip -r ~/release/AirISP-${{ matrix.target.file_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next
           fi
 
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
+          allowUpdates: true
           artifacts: "~/release/AirISP-${{ matrix.target.file_name }}.zip"
 
       
