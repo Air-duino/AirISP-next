@@ -26,8 +26,6 @@ jobs:
             file_name : "linux-aarch64"
           - name: armv7-unknown-linux-gnueabihf
             file_name : "linux-armv7"
-          - name: aarch64-unknown-linux-gnu
-            file_name : "linux-aarch64"
           - name: aarch64-apple-darwin
             file_name : "macos-aarch64"
 
@@ -43,10 +41,12 @@ jobs:
           sudo apt-get update
           sudo apt-get upgrade -y
           sudo apt-get install -y libudev-dev libusb-1.0-0-dev libssl-dev pkg-config
-
+          cargo install cross --git https://github.com/cross-rs/cross
+          sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+          sudo systemctl start docker
 
       - name: Build
-        run: cargo build --release --target ${{ matrix.target.name }}
+        run: cross build --release --target ${{ matrix.target.name }}
 
       - name: package # 将编译好的二进制文件打包，如果是Windows就打包exe文件，其它系统打包AirISP*文件
         run: |
