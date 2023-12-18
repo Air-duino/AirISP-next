@@ -81,7 +81,8 @@ jobs:
         if: runner.os == 'Windows'
         run : |
             mkdir -p ~/release
-            zip -p ~/release/AirISP-${{ matrix.target.file_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next.exe
+            winget install 7zip.7zip -e -y
+            7z a -tzip -p~/release/AirISP-${{ matrix.target.file_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next.exe
 
       - name: Package
         if: runner.os != 'Windows'
