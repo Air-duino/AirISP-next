@@ -79,7 +79,7 @@ jobs:
           then
             zip -j ~/release/AirISP-${{ matrix.target.file_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next.exe
           else
-            zip -j ~/release/AirISP-${{ matrix.target.file_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next.exe
+            zip -j ~/release/AirISP-${{ matrix.target.file_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next
           fi
 
       - name: Create release
