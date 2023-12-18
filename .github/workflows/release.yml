@@ -79,16 +79,17 @@ jobs:
 
       - name: package # 将编译好的二进制文件打包，如果是Windows就打包exe文件，其它系统打包AirISP*文件
         run: |
+          mkdir -p ~/release
           if [[ ${{ matrix.target.name }} =~ "windows" ]]
           then
-            zip -j target/${{ matrix.target.name }}/release/AirISP-${{ matrix.target.file_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next.exe
+            zip -j ~/release/AirISP-${{ matrix.target.file_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next.exe
           else
-            zip -j target/${{ matrix.target.name }}/release/AirISP-${{ matrix.target.file_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next
+            zip -j ~/release/AirISP-${{ matrix.target.file_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next
           fi
 
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "target/${{ matrix.target.name }}/release/AirISP-${{ matrix.target.file_name }}.zip"
+          artifacts: "~/release/AirISP-${{ matrix.target.file_name }}.zip"
 
       
