@@ -12,9 +12,25 @@ use clap::error::Error;
 use clap::{Arg, ArgAction, ArgMatches, Args, ColorChoice, Command, command, FromArgMatches, Parser, value_parser};
 use clap::builder::{styling, ValueParser};
 
-fn set_language(air_isp: &AirISP::AirISP) {
+fn get_system_language() -> String {
     let language = whoami::lang().collect::<Vec<String>>();
     let language = language[0].as_str().to_owned();
+    language
+}
+
+fn default_language()  {
+    let language = get_system_language();
+    let i18n_list = rust_i18n::available_locales!();
+    if !i18n_list.contains(&language.as_str()) {
+        rust_i18n::set_locale("en");
+    }
+    else {
+        rust_i18n::set_locale(&language);
+    }
+}
+
+fn set_language(air_isp: &AirISP::AirISP) {
+    let language = get_system_language();
     let i18n_list = rust_i18n::available_locales!();
 
     if air_isp.get_language() != "auto" {
@@ -23,7 +39,6 @@ fn set_language(air_isp: &AirISP::AirISP) {
     }
     // 不支持的语言默认使用英语
     if !i18n_list.contains(&language.as_str()) {
-        println!("{}","Language not supported");
         rust_i18n::set_locale("en");
     }
     else {
@@ -32,7 +47,7 @@ fn set_language(air_isp: &AirISP::AirISP) {
 }
 
 fn main() {
-
+    default_language();
     let matches = AirISP::air_isp().get_matches();
 
     let air_isp = AirISP::AirISP::new(&matches);
