@@ -14,20 +14,20 @@ jobs:
         target: 
           - name: x86_64-unknown-linux-gnu
             file_name : "linux-x86_64"
-          - name: x86_64-apple-darwin
-            file_name : "macos-x86_64"
-          - name: x86_64-pc-windows-msvc
-            file_name : "windows-x86_64"
-          - name: i686-unknown-linux-gnu
-            file_name : "linux-x86"
-          - name: i686-pc-windows-msvc
-            file_name : "windows-x86"
-          - name: aarch64-unknown-linux-gnu
-            file_name : "linux-aarch64"
-          - name: armv7-unknown-linux-gnueabihf
-            file_name : "linux-armv7"
-          - name: aarch64-apple-darwin
-            file_name : "macos-aarch64"
+          # - name: x86_64-apple-darwin
+          #   file_name : "macos-x86_64"
+          # - name: x86_64-pc-windows-msvc
+          #   file_name : "windows-x86_64"
+          # - name: i686-unknown-linux-gnu
+          #   file_name : "linux-x86"
+          # - name: i686-pc-windows-msvc
+          #   file_name : "windows-x86"
+          # - name: aarch64-unknown-linux-gnu
+          #   file_name : "linux-aarch64"
+          # - name: armv7-unknown-linux-gnueabihf
+          #   file_name : "linux-armv7"
+          # - name: aarch64-apple-darwin
+          #   file_name : "macos-aarch64"
 
     steps:
       - uses: actions/checkout@v4
