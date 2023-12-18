@@ -28,7 +28,7 @@ jobs:
             file_name : "linux-armv7"
           - name: aarch64-unknown-linux-gnu
             file_name : "linux-aarch64"
-          - name: aaarch64-apple-darwin
+          - name: aarch64-apple-darwin
             file_name : "macos-aarch64"
 
     steps:
