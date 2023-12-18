@@ -80,19 +80,19 @@ jobs:
       - name: Windows package # 将编译好的二进制文件打包，如果是Windows就打包exe文件，其它系统打包AirISP*文件
         if: runner.os == 'Windows'
         run : |
-            mkdir -p ~/release
-            7z a -tzip -p ~/release/AirISP-${{ matrix.target.file_name }}.${{ github.ref_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next.exe
+            mkdir -p ${{ github.workspace }}/release
+            7z a -tzip -p ${{ github.workspace }}/release/AirISP-${{ matrix.target.file_name }}.${{ github.ref_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next.exe
 
       - name: Package
         if: runner.os != 'Windows'
         run : |
-            mkdir -p ~/release
-            zip -p ~/release/AirISP-${{ matrix.target.file_name }}.${{ github.ref_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next
+            mkdir -p ${{ github.workspace }}/release
+            zip -p ${{ github.workspace }}/release/AirISP-${{ matrix.target.file_name }}.${{ github.ref_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next
 
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          artifacts: "~/release/AirISP-${{ matrix.target.file_name }}.${{ github.ref_name }}.zip"
+          artifacts: "${{ github.workspace }}/release/AirISP-${{ matrix.target.file_name }}.${{ github.ref_name }}.zip"
 
       
