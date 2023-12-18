@@ -1,0 +1,58 @@
+name: release
+
+on:
+  push:
+    tags:
+    - '*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: 
+          - name: x86_64-unknown-linux-gnu
+            file_name : "linux-x86_64"
+          - name: x86_64-apple-darwin
+            file_name : "macos-x86_64"
+          - name: x86_64-pc-windows-msvc
+            file_name : "windows-x86_64"
+          - name: i686-unknown-linux-gnu
+            file_name : "linux-x86"
+          - name: i686-pc-windows-msvc
+            file_name : "windows-x86"
+          - name: aarch64-unknown-linux-gnu
+            file_name : "linux-aarch64"
+          - name: armv7-unknown-linux-gnueabihf
+            file_name : "linux-armv7"
+          - name: aarch64-unknown-linux-gnu
+            file_name : "linux-aarch64"
+          - name: aaarch64-apple-darwin
+            file_name : "macos-aarch64"
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target.name }}
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target.name }}
+
+      - name: package # 将编译好的二进制文件打包，如果是Windows就打包exe文件，其它系统打包AirISP*文件
+        run: |
+          if [[ ${{ matrix.target.name }} =~ "windows"* ]]
+          then
+            zip -j ~/release/AirISP-${{ matrix.target.file_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next.exe
+          else
+            zip -j ~/release/AirISP-${{ matrix.target.file_name }}.zip target/${{ matrix.target.name }}/release/AirISP-next.exe
+          fi
+
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "~/release/AirISP-${{ matrix.target.file_name }}.zip"
+
+      
