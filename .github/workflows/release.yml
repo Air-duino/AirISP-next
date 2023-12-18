@@ -34,7 +34,7 @@ jobs:
           - name: aarch64-apple-darwin
             file_name : "macos-aarch64"
             os: macos-latest
-        
+
     runs-on: ${{ matrix.target.os }}
 
     steps:
@@ -50,7 +50,6 @@ jobs:
           sudo apt-get update
           sudo apt-get upgrade -y
           sudo apt-get install -y libudev-dev libusb-1.0-0-dev libssl-dev pkg-config
-          cargo install cross --git https://github.com/cross-rs/cross
           for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg -y; done
           # Add Docker's official GPG key:
           sudo apt-get update -y
@@ -70,7 +69,9 @@ jobs:
           sudo systemctl start docker
 
       - name: Build
-        run: cross build --release --target ${{ matrix.target.name }}
+        run: |
+          cargo install cross --git https://github.com/cross-rs/cross
+          cross build --release --target ${{ matrix.target.name }}
 
       - name: package # 将编译好的二进制文件打包，如果是Windows就打包exe文件，其它系统打包AirISP*文件
         run: |
