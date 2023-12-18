@@ -34,7 +34,8 @@ jobs:
           - name: aarch64-apple-darwin
             file_name : "macos-aarch64"
             os: macos-latest
-          runs-on: ${{ matrix.target.os }}
+        
+    runs-on: ${{ matrix.target.os }}
 
     steps:
       - uses: actions/checkout@v4
