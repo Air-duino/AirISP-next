@@ -13,22 +13,21 @@ use clap::{Arg, ArgAction, ArgMatches, Args, ColorChoice, Command, command, From
 use clap::builder::{styling, ValueParser};
 
 fn set_language(air_isp: &AirISP::AirISP) {
-    let language = whoami::lang().collect::<Vec<String>>();
-    let language = language[0].as_str().to_owned();
-    let i18n_list = rust_i18n::available_locales!();
-
-    if air_isp.get_language() != "auto" {
-        rust_i18n::set_locale(&air_isp.get_language());
-        return;
-    }
-    // 不支持的语言默认使用英语
-    if !i18n_list.contains(&language.as_str()) {
-        println!("{}","Language not supported");
-        rust_i18n::set_locale("en");
-    }
-    else {
-        rust_i18n::set_locale(&language);
-    }
+    let language = if air_isp.get_language() != "auto" {
+        air_isp.get_language().to_owned()
+    } else {
+        let language = whoami::lang().collect::<Vec<String>>();
+        let language = language[0].as_str().to_owned();
+        let i18n_list = rust_i18n::available_locales!();
+        // 不支持的语言默认使用英语
+        if !i18n_list.contains(&language.as_str()) {
+            println!("{}","Language not supported");
+            "en".to_owned()
+        } else {
+            language
+        }
+    };
+    rust_i18n::set_locale(&language);
 }
 
 fn main() {
@@ -38,20 +37,21 @@ fn main() {
     let air_isp = AirISP::AirISP::new(&matches);
     set_language(&air_isp);
     // 打印版本号
-    println!("{}", format!("AirISP version: {}", env!("CARGO_PKG_VERSION")).blue());
+    println!("AirISP version: {}", env!("CARGO_PKG_VERSION").blue());
     
-    match matches.subcommand() {
-        Some(("write_flash", sub_m)) => {
-            let mut wf = write_flash::WriteFlash::new(&sub_m, air_isp);
-            wf.run().unwrap();
-        },
-        Some(("chip_id", sub_m)) => {
-            let mut get = get::Get::new(&sub_m, air_isp);
-            get.chip_id().unwrap();
-
-        },
-        _ => {
-            println!("no subcommand");
+    if let Some((command, sub_m)) = matches.subcommand() {
+        match command {
+            "write_flash" => {
+                let mut wf = write_flash::WriteFlash::new(&sub_m, air_isp);
+                wf.run().unwrap();
+            },
+            "chip_id" => {
+                let mut get = get::Get::new(&sub_m, air_isp);
+                get.chip_id().unwrap();
+            },
+            _ => {
+                println!("no subcommand");
+            }
         }
     }
 }

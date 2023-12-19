@@ -193,26 +193,24 @@ impl AirISP
     pub fn read_file(&self, file_path: &str, address: &mut u32, bin: &mut Vec<u8>) -> Result<(), Box<dyn Error>>
     {
         // 判断文件后缀是.hex还是.bin
-        let mut file = std::fs::File::open(file_path).unwrap();
-        let mut b = Vec::new();
+        let mut file = std::fs::File::open(file_path)?;
         // 如果文件为空，直接返回
         if file.metadata().unwrap().len() == 0 {
            return Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "file is empty")));
         }
         // 读取后缀名
         let path = Path::new(file_path);
-        let suffix = path.extension().unwrap().to_str().unwrap();
-         match suffix {
+        let suffix = path.extension().unwrap().to_str().unwrap_or("");
+        match suffix {
             "hex" => {
-                let mut hex = String::from("");
-                file.read_to_string(&mut hex).unwrap();
-                self.hex_to_bin(hex, address, &mut b).unwrap();
+                let mut hex = String::new();
+                file.read_to_string(&mut hex)?;
+                self.hex_to_bin(hex, address, bin)?;
             }
             "bin" | _ => {
-                file.read_to_end(&mut b).unwrap();
+                file.read_to_end(bin)?;
             }
         }
-        *bin = b;
         Ok(())
     }
 
@@ -234,6 +232,7 @@ impl AirISP
     /// # 返回值
     /// 如果成功，返回 Ok(())；如果失败，返回错误信息
     pub fn hex_to_bin(&self, hex: String,address: &mut u32, bin: &mut Vec<u8>) -> Result<(), Box<dyn Error>> {
+        const FILL_BYTE: u8 = 0xFF;
         let mut start_address = String::from("-1");
         let mut current_address = 0;
 
@@ -248,9 +247,7 @@ impl AirISP
                     if start_address != "-1" {
                         if current_address < offset_address {
                             // 如果当前地址小于偏移地址，用 0xFF 填充间隙
-                            for _ in current_address..offset_address {
-                                bin.push(0xFF);
-                            }
+                            bin.resize(offset_address, FILL_BYTE);
                         }
                         // 转换数据区的内容为二进制并存入 bin
                         for i in 0..data_length {
@@ -285,14 +282,10 @@ macro_rules! instantiate_peripheral {
     ($air_isp:ident) => {
         match $air_isp.get_peripheral() {
             AirISP::Peripheral::Swd => {
-                let p : Box<dyn peripheral::Pp>;
-                p = Box::new(peripheral::swd::Swd::new($air_isp));
-                p
+                Box::new(peripheral::swd::Swd::new($air_isp)) as Box<dyn peripheral::Pp>
             },
             AirISP::Peripheral::GeneralUart | _ => {
-                let p : Box<dyn peripheral::Pp>;
-                p = Box::new(peripheral::general_uart::GeneralUart::new($air_isp));
-                p
+                Box::new(peripheral::general_uart::GeneralUart::new($air_isp)) as Box<dyn peripheral::Pp>
             }
         }
     };
