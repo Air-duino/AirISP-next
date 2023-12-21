@@ -59,7 +59,7 @@ pub struct WriteFlash {
 impl WriteFlash {
     pub fn new(matches: &ArgMatches, air_isp: AirISP::AirISP) -> WriteFlash
     {
-        let address = matches.get_one::<String>("address").unwrap().to_string();
+        let address = matches.get_one::<String>("address").unwrap();
         let address = if address.starts_with("0x") || address.starts_with("0X") {
             u32::from_str_radix(&address[2..], 16).unwrap()
         } else {
@@ -67,7 +67,7 @@ impl WriteFlash {
         };
 
         WriteFlash {
-            address: address,
+            address,
             file_path: matches.get_one::<String>("path").unwrap().to_string(),
             erase: *matches.get_one::<bool>("erase-all").unwrap(),
             progress: if *matches.get_one::<bool>("no-progress").unwrap() {
@@ -76,7 +76,7 @@ impl WriteFlash {
                 AirISP::Progress::Percent
             },
 
-            air_isp: air_isp,
+            air_isp,
         }
     }
 
@@ -88,14 +88,14 @@ impl WriteFlash {
         let mut bin = Vec::new();
         air_isp.read_file(&self.file_path,&mut self.address ,&mut bin)?;
 
-        p.reset_bootloader().unwrap();
+        p.reset_bootloader()?;
 
         if self.erase {
-            p.erase_all().unwrap();
+            p.erase_all()?;
         }
 
-        p.write_flash(self.address, &bin, AirISP::Progress::Percent).unwrap();
-        p.reset_app().unwrap();
+        p.write_flash(self.address, &bin, AirISP::Progress::Percent)?;
+        p.reset_app()?;
         Ok(())
     }
 }

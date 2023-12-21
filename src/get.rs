@@ -1,10 +1,8 @@
-use crate::AirISP::air_isp;
 use std::error::Error;
-use clap::{Arg, ColorChoice, Command, value_parser};
+use clap::{ColorChoice, Command};
 use clap::ArgMatches;
 use crate::{AirISP, peripheral};
 use rust_i18n::t;
-use peripheral::Pp;
 
 pub fn chip_id_command() -> Command {
     Command::new("chip_id")
@@ -17,7 +15,7 @@ pub struct Get {
 }
 
 impl Get {
-    pub fn new(matches: &ArgMatches, air_isp: AirISP::AirISP) -> Get {
+    pub fn new(_: &ArgMatches, air_isp: AirISP::AirISP) -> Get {
         Get {
             air_isp: air_isp.clone(),
         }
