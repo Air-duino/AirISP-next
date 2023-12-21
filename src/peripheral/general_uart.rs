@@ -1,20 +1,14 @@
 use crate::peripheral::Pp;
 use crate::AirISP;
-use crate::AirISP::air_isp;
 use colored::Colorize;
 use rust_i18n::t;
-use serialport::{available_ports, SerialPort, SerialPortType};
+use serialport::SerialPort;
 use std::error::Error;
-use std::ffi::c_float;
-use std::fmt::format;
 use std::io::{Read, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
-use crossterm::ExecutableCommand;
-use crossterm::terminal::ClearType;
 use tokio::runtime::Runtime;
-use tokio::time::sleep;
 
 #[repr(u8)]
 enum Command {
@@ -78,7 +72,6 @@ impl GeneralUart<'_> {
 
         GeneralUart {
             air_isp,
-            // handle 初始化为null
             handle: port,
         }
     }
@@ -310,7 +303,7 @@ impl Pp for GeneralUart<'_> {
                     }
                     Err(_) => {
                         if i == self.air_isp.get_connect_attempts() - 1 {
-                            println!(""); // 换行
+                            println!(); // 换行
                             println!("{}", format!("{}", t!("connect_fail_help")).red());
                             std::process::exit(1);
                         }
@@ -323,7 +316,7 @@ impl Pp for GeneralUart<'_> {
             is_cancelled.store(true, Ordering::SeqCst);
             log_task.await.unwrap();
         });
-        println!(""); // 换行
+        println!(); // 换行
 
         // 读取Chip ID
         let retry = 3;
