@@ -28,6 +28,7 @@ pub fn air_isp() -> Command
         .short('p')
         .long("port")
         .help(t!("port_help"))
+        .default_value("auto")
         .required(false);
 
     let chip = Arg::new("chip")
@@ -123,6 +124,7 @@ pub fn air_isp() -> Command
 pub struct AirISP {
     port: String,
     baud: u32,
+    chip: String,
     trace: bool,
     connect_attempts: u32,
     before: String,
@@ -149,6 +151,7 @@ impl AirISP
             after: matches.get_one::<String>("after").unwrap().to_string(),
             language: matches.get_one::<String>("language").unwrap().to_string(),
             peripheral: pp,
+            chip: matches.get_one::<String>("chip").unwrap().to_string(),
         }
     }
 
@@ -188,6 +191,11 @@ impl AirISP
     pub fn get_language(&self) -> String
     {
         self.language.clone()
+    }
+
+    pub fn get_chip(&self) -> String
+    {
+        self.chip.clone()
     }
 
     pub fn read_file(&self, file_path: &str, address: &mut u32, bin: &mut Vec<u8>) -> Result<(), Box<dyn Error>>
