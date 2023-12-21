@@ -1,7 +1,6 @@
 pub mod general_uart;
 pub mod swd;
 use std::error::Error;
-use serialport::{available_ports, SerialPort, SerialPortType};
 use crate::AirISP;
 
 pub trait Pp {

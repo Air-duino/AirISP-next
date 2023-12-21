@@ -81,7 +81,7 @@ impl GeneralUart<'_> {
      */
     pub fn get_ack(&mut self) -> Result<(), Box<dyn Error>> {
         let mut buf = [0u8; 1];
-        let s = self.handle.read(&mut buf)?;
+        self.handle.read(&mut buf)?;
         if buf[0] == Ack::Ack as u8 {
             Ok(())
         } else {

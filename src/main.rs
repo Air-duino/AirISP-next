@@ -1,16 +1,12 @@
+#![allow(non_snake_case)]
 mod write_flash;
 mod peripheral;
 mod AirISP;
 mod get;
 
-use rust_i18n::t;
 use colored::*;
 
 rust_i18n::i18n!("i18n");
-
-use clap::error::Error;
-use clap::{Arg, ArgAction, ArgMatches, Args, ColorChoice, Command, command, FromArgMatches, Parser, value_parser};
-use clap::builder::{styling, ValueParser};
 
 fn default_language() {
     let language = whoami::lang().collect::<Vec<String>>();

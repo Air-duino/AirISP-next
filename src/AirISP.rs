@@ -1,10 +1,10 @@
+#![allow(non_snake_case)]
 use std::error::Error;
 use std::io::Read;
 use clap::{Arg, ArgMatches, ColorChoice, Command, value_parser};
 use clap::builder::styling;
 use rust_i18n::t;
-use crate::{get, peripheral, write_flash};
-use crate::peripheral::Pp;
+use crate::{get, write_flash};
 use std::path::Path;
 use std::string::String;
 

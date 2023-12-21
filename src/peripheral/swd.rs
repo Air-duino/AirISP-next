@@ -1,11 +1,7 @@
 use crate::peripheral::Pp;
 use std::error::Error;
-use std::ffi::c_float;
-use serialport::{available_ports, SerialPort, SerialPortType};
 use crate::AirISP;
 use rust_i18n::t;
-
-use std::time::Duration;
 use probe_rs::{Session, flashing, Permissions};
 use probe_rs::flashing::DownloadOptions;
 use colored::Colorize;
