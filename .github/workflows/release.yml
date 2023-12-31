@@ -18,9 +18,9 @@ jobs:
             file_name : "linux-aarch64"
             os: ubuntu-latest
           
-          - name: i686-pc-windows-msvc
-            file_name : "windows-x86"
-            os: windows-latest
+#          - name: i686-pc-windows-msvc
+#            file_name : "windows-x86"
+#            os: windows-latest
           - name: x86_64-pc-windows-msvc
             file_name : "windows-x86_64"
             os: windows-latest
