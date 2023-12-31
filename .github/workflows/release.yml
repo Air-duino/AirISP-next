@@ -83,19 +83,19 @@ jobs:
         run : |
             mkdir -p ${{ github.workspace }}/release
             cd target/${{ matrix.target.name }}/release
-            7z a -tzip ${{ github.workspace }}/release/AirISP-${{ matrix.target.file_name }}.${{ github.ref_name }}.zip AirISP-next.exe
+            7z a -tzip ${{ github.workspace }}/release/AirISP-${{ matrix.target.file_name }}-${{ github.ref_name }}.zip AirISP-next.exe
 
       - name: Package
         if: runner.os != 'Windows'
         run : |
             mkdir -p ${{ github.workspace }}/release
             cd target/${{ matrix.target.name }}/release
-            zip ${{ github.workspace }}/release/AirISP-${{ matrix.target.file_name }}.${{ github.ref_name }}.zip AirISP-next
+            zip ${{ github.workspace }}/release/AirISP-${{ matrix.target.file_name }}-${{ github.ref_name }}.zip AirISP-next
 
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          artifacts: "${{ github.workspace }}/release/AirISP-${{ matrix.target.file_name }}.${{ github.ref_name }}.zip"
+          artifacts: "${{ github.workspace }}/release/AirISP-${{ matrix.target.file_name }}-${{ github.ref_name }}.zip"
 
       
