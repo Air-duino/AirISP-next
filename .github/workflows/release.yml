@@ -83,7 +83,8 @@ jobs:
         run : |
             mkdir -p ${{ github.workspace }}/release
             cd target/${{ matrix.target.name }}/release
-            cp AirISP-next.exe ${{ github.workspace }}/release/AirISP-next
+            mkdir ${{ github.workspace }}/release/AirISP-next/
+            cp AirISP-next.exe ${{ github.workspace }}/release/AirISP-next/
             cd ${{ github.workspace }}/release
             7z a -tzip ${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.zip AirISP-next
 
@@ -93,7 +94,8 @@ jobs:
             mkdir -p ${{ github.workspace }}/release
             cd target/${{ matrix.target.name }}/release
             chmod +x AirISP-next
-            cp AirISP-next ${{ github.workspace }}/release/AirISP-next
+            mkdir ${{ github.workspace }}/release/AirISP-next/
+            cp AirISP-next ${{ github.workspace }}/release/AirISP-next/
             cd ${{ github.workspace }}/release
             tar zcvf ${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.tar.gz AirISP-next
 
