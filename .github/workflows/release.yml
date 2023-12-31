@@ -93,18 +93,18 @@ jobs:
             cd target/${{ matrix.target.name }}/release
             chmod +x AirISP-next
             cp AirISP-next ${{ github.workspace }}/release
-            tar zcvf ${{ github.workspace }}/release/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.tar.gz target/${{ matrix.target.name }}/release
+            tar zcvf ${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.tar.gz target/${{ matrix.target.name }}/release
 
       - name: Create Windows release
         if: runner.os == 'Windows'
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          artifacts: "${{ github.workspace }}/release/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.zip"
+          artifacts: "${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.zip"
 
       - name: Create release
         if: runner.os != 'Windows'
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          artifacts: "${{ github.workspace }}/release/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.tar.gz"
+          artifacts: "${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.tar.gz"
