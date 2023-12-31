@@ -1,3 +1,4 @@
+use crate::peripheral;
 use crate::peripheral::Pp;
 use crate::AirISP;
 use colored::Colorize;
@@ -9,6 +10,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::runtime::Runtime;
+use crate::chip_info::ChipInfo;
+
+use super::chip_info;
 
 #[repr(u8)]
 enum Command {
@@ -419,5 +423,14 @@ impl Pp for GeneralUart<'_> {
         }
 
         Ok(())
+    }
+}
+
+impl chip_info for GeneralUart<'_> {
+    fn get_chip(&mut self) -> Result<&peripheral::ChipInfo, Box<dyn Error>> {
+        todo!()
+    }
+    fn get_chip_pid(&mut self) -> Result<u32, Box<dyn Error>> {
+        todo!()
     }
 }

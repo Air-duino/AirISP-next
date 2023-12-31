@@ -21,6 +21,7 @@ pub enum Peripheral {
     Swd,
 }
 
+
 pub fn air_isp() -> Command
 {
     let port = Arg::new("port")
@@ -225,7 +226,6 @@ impl AirISP
     /// 如果是
     pub fn read_real_address(&mut self, address: &mut u32) -> Result<(), Box<dyn Error>>
     {
-
         Ok(())
     }
 

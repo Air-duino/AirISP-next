@@ -109,6 +109,16 @@ get_chip_success_help:
   en: "Chip ID is: %{chip_id}"
   ja: "チップID: %{chip_id}"
 
+get_chip_id_unknown_help:
+  zh-CN: "未知芯片，假设为 %{name} ，若与事实不符请指定芯片型号"
+  en: "Unknown chip, assuming %{name}, if it is not the case, please specify the chip model"
+  ja: "不明なチップ、%{name} と仮定しています、事実と異なる場合はチップモデルを指定してください"
+
+get_chip_auto_fail_help:
+  zh-CN: "自动获取 chip 类型失败，请手动指定！"
+  en: "Failed to automatically get chip type, please specify manually!"
+  ja: "チップタイプの自動取得に失敗しました、手動で指定してください！"
+
 get_chip_fail_help:
   zh-CN: "获取芯片ID失败"
   en: "Failed to get chip ID"
