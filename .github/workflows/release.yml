@@ -14,9 +14,6 @@ jobs:
           - name: x86_64-unknown-linux-musl
             file_name : "linux-x86_64"
             os: ubuntu-latest
-          - name: i686-unknown-linux-musl
-            file_name : "linux-x86"
-            os: ubuntu-latest
           - name: aarch64-unknown-linux-musl
             file_name : "linux-aarch64"
             os: ubuntu-latest
