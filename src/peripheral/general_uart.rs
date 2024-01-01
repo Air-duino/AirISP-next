@@ -398,18 +398,21 @@ impl Pp for GeneralUart<'_> {
             // 硬件复位
             "hard_reset" => {
                 match self.air_isp.get_before().as_str() {
-                    // 使用异或电路
                     "direct_connect" => {
                         self.handle.write_request_to_send(true).unwrap();
                         self.handle.write_data_terminal_ready(true).unwrap();
                         std::thread::sleep(Duration::from_millis(20));
                         self.handle.write_request_to_send(false).unwrap();
+                        self.handle.write_data_terminal_ready(true).unwrap();
                     },
+                    // 使用异或电路
                     "default_reset" | _ => {
                         self.handle.write_request_to_send(true).unwrap();
+                        self.handle.write_data_terminal_ready(false).unwrap();
 
                         std::thread::sleep(Duration::from_millis(20));
                         self.handle.write_request_to_send(false).unwrap();
+                        self.handle.write_data_terminal_ready(false).unwrap();
                     }
                 }
 
