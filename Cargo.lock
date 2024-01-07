@@ -10,6 +10,7 @@ dependencies = [
  "colored",
  "crossterm",
  "hex",
+ "log",
  "probe-rs",
  "rust-i18n",
  "serde",

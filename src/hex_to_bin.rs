@@ -26,6 +26,16 @@ pub fn hex_to_bin(hex: &str) -> Result<Vec<Bin>, Box<dyn Error>> {
         let data_length = usize::from_str_radix(&hex_line[0..2], 16)?;
         let offset_address = usize::from_str_radix(&hex_line[2..6], 16)?;
         let record_type = usize::from_str_radix(&hex_line[6..8], 16)?;
+        let checksum = u8::from_str_radix(&hex_line[hex_line.len() - 2..], 16)?;
+        let mut sum: u8 = 0;
+        for i in (0..hex_line.len() - 2).step_by(2) {
+            let byte = u8::from_str_radix(&hex_line[i..i + 2], 16)?;
+            sum = sum.wrapping_add(byte);
+        }
+        sum = (0xFF - sum).wrapping_add(1);
+        if sum != checksum {
+            return Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "checksum error")));
+        }
 
         match record_type {
             0 => { // 数据记录
