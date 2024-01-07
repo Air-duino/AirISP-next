@@ -4,7 +4,7 @@ use std::io::Read;
 use clap::{Arg, ArgMatches, ColorChoice, Command, value_parser};
 use clap::builder::styling;
 use rust_i18n::t;
-use crate::{get, write_flash};
+use crate::{get, hex_to_bin, write_flash};
 use std::path::Path;
 use std::string::String;
 use crate::peripheral;
@@ -206,7 +206,7 @@ impl AirISP
         }
     }
 
-    pub fn read_file(&self, file_path: &str, address: &mut u32, bin: &mut Vec<u8>) -> Result<(), Box<dyn Error>>
+    pub fn read_file(&self, file_path: &str) -> Result<Vec<hex_to_bin::Bin>, Box<dyn Error>>
     {
         // 判断文件后缀是.hex还是.bin
         let mut file = std::fs::File::open(file_path)?;
@@ -217,76 +217,21 @@ impl AirISP
         // 读取后缀名
         let path = Path::new(file_path);
         let suffix = path.extension().unwrap().to_str().unwrap_or("");
-        match suffix {
+        let vec_bin = match suffix {
             "hex" => {
                 let mut hex = String::new();
                 file.read_to_string(&mut hex)?;
-                self.hex_to_bin(hex, address, bin)?;
+                hex_to_bin::hex_to_bin(&hex)?
             }
             "bin" | _ => {
-                file.read_to_end(bin)?;
+                let mut bin = Vec::new();
+                file.read_to_end(&mut bin)?;
+                vec![hex_to_bin::Bin {
+                    address: 0xFFFF_FFFF,
+                    data: bin,
+                }]
             }
-        }
-        Ok(())
-    }
-
-    /// 如果是
-    pub fn read_real_address(&mut self, address: &mut u32) -> Result<(), Box<dyn Error>>
-    {
-        Ok(())
-    }
-
-
-    /// 将 Intel Hex 格式的字符串转换为二进制数据
-    ///
-    /// # 参数
-    /// * `hex` - Intel Hex 格式的字符串
-    /// * `address` - 起始地址
-    /// * `bin` - 要填充的二进制数据向量
-    ///
-    /// # 返回值
-    /// 如果成功，返回 Ok(())；如果失败，返回错误信息
-    pub fn hex_to_bin(&self, hex: String,address: &mut u32, bin: &mut Vec<u8>) -> Result<(), Box<dyn Error>> {
-        const FILL_BYTE: u8 = 0xFF;
-        let mut start_address = String::from("-1");
-        let mut current_address = 0;
-
-        for line in hex.lines() {
-            let hex_line = line.replace(":", "").replace(" ", "");
-            let data_length = usize::from_str_radix(&hex_line[0..2], 16)?;
-            let offset_address = usize::from_str_radix(&hex_line[2..6], 16)?;
-            let record_type = usize::from_str_radix(&hex_line[6..8], 16)?;
-
-            match record_type {
-                0 => { // 数据记录
-                    if start_address != "-1" {
-                        if current_address < offset_address {
-                            // 如果当前地址小于偏移地址，用 0xFF 填充间隙
-                            bin.resize(offset_address, FILL_BYTE);
-                        }
-                        // 转换数据区的内容为二进制并存入 bin
-                        for i in 0..data_length {
-                            let data_byte = u8::from_str_radix(&hex_line[8 + i * 2..10 + i * 2], 16)?;
-                            bin.push(data_byte);
-                            current_address += 1;
-                        }
-                    }
-                },
-                1 => { // 文件结束记录
-                    return Ok(());
-                },
-                4 => { // 扩展线性地址记录
-                    // 获取高16位地址并更新起始地址
-                    let high_address = &hex_line[8..12];
-                    start_address = format!("0x{}0000", high_address);
-                    *address = u32::from_str_radix(&start_address[2..], 16)?;
-                    current_address = 0;
-                },
-                _ => { // 其他记录类型
-                    // 忽略不处理
-                }
-            }
-        }
-        Ok(())
+        };
+        Ok(vec_bin)
     }
 }

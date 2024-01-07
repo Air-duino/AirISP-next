@@ -4,6 +4,7 @@ mod peripheral;
 mod AirISP;
 mod get;
 mod chip_info;
+mod hex_to_bin;
 
 use colored::*;
 

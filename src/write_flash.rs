@@ -84,9 +84,7 @@ impl WriteFlash {
     {
         let air_isp = &self.air_isp;
         let mut binding = air_isp.get_peripheral_handle()?;
-        let mut p = binding.get_pp();
-        let mut bin = Vec::new();
-        air_isp.read_file(&self.file_path,&mut self.address ,&mut bin)?;
+        let p = binding.get_pp();
 
         p.reset_bootloader()?;
 
@@ -94,7 +92,14 @@ impl WriteFlash {
             p.erase_all()?;
         }
 
-        p.write_flash(self.address, &bin, AirISP::Progress::Percent)?;
+        for bin in air_isp.read_file(self.file_path.as_str())? {
+            if bin.address != 0xFFFFFFFF {
+                p.write_flash(bin.address, &bin.data, AirISP::Progress::Percent)?;
+            } else {
+                p.write_flash(self.address, &bin.data, AirISP::Progress::Percent)?; // 0xFFFFFFFF 代表不指定地址，使用命令行参数指定的地址
+            }
+        }
+
         p.reset_app()?;
         Ok(())
     }
