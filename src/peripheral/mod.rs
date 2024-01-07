@@ -1,7 +1,7 @@
 pub mod general_uart;
 pub mod swd;
 use std::error::Error;
-use crate::AirISP;
+use crate::{AirISP, peripheral};
 
 use serde::Deserialize;
 include!(concat!(env!("OUT_DIR"), "/chips.rs"));
@@ -27,3 +27,16 @@ pub trait Pp {
     fn erase_all(&mut self) -> Result<(), Box<dyn Error>>;
 }
 
+pub enum Peripheral<'a> {
+    Swd(peripheral::swd::Swd<'a>),
+    GeneralUart(peripheral::general_uart::GeneralUart<'a>),
+}
+
+impl<'a> Peripheral<'a> {
+    pub fn get_pp(&mut self) -> &mut dyn Pp {
+        match self {
+            Peripheral::Swd(pp) => pp,
+            Peripheral::GeneralUart(pp) => pp,
+        }
+    }
+}

@@ -83,8 +83,8 @@ impl WriteFlash {
     pub fn run(&mut self) -> Result<(), Box<dyn Error>>
     {
         let air_isp = &self.air_isp;
-        use crate::instantiate_peripheral;
-        let mut p  = instantiate_peripheral!(air_isp);
+        let mut binding = air_isp.get_peripheral_handle()?;
+        let mut p = binding.get_pp();
         let mut bin = Vec::new();
         air_isp.read_file(&self.file_path,&mut self.address ,&mut bin)?;
 

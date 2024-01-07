@@ -17,15 +17,15 @@ pub struct Get {
 impl Get {
     pub fn new(_: &ArgMatches, air_isp: AirISP::AirISP) -> Get {
         Get {
-            air_isp: air_isp.clone(),
+            air_isp: air_isp,
         }
     }
 
     pub fn chip_id(&mut self) -> Result<(), Box<dyn Error>> {
         let air_isp = &self.air_isp;
-        use crate::instantiate_peripheral;
-        let mut p  = instantiate_peripheral!(air_isp);
-        p.get_chip_id()?;
+        let mut binding = air_isp.get_peripheral_handle()?;
+        let mut peripheral = binding.get_pp();
+        peripheral.get_chip_id()?;
         Ok(())
     }
 }

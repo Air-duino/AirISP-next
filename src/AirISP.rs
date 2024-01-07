@@ -7,6 +7,7 @@ use rust_i18n::t;
 use crate::{get, write_flash};
 use std::path::Path;
 use std::string::String;
+use crate::peripheral;
 
 #[derive(PartialEq)]
 pub enum Progress {
@@ -14,13 +15,6 @@ pub enum Progress {
     Bar,
     Percent,
 }
-
-#[derive(Clone, Copy)]
-pub enum Peripheral {
-    GeneralUart,
-    Swd,
-}
-
 
 pub fn air_isp() -> Command
 {
@@ -84,7 +78,6 @@ pub fn air_isp() -> Command
         .global(true)
         .long("peripheral")
         .help(t!("peripheral_help"))
-        .value_parser(["Uart", "swd"])
         .default_value("Uart");
 
     let language = Arg::new("language")
@@ -121,7 +114,6 @@ pub fn air_isp() -> Command
         .subcommand(get::chip_id_command())
 }
 
-#[derive(Clone)]
 pub struct AirISP {
     port: String,
     baud: u32,
@@ -131,18 +123,13 @@ pub struct AirISP {
     before: String,
     after: String,
     language: String,
-
-    peripheral: Peripheral,
+    peripheral: String,
 }
 
 impl AirISP
 {
     pub fn new(matches: &ArgMatches) -> AirISP
     {
-        let pp = match matches.get_one::<String>("peripheral").unwrap().as_str() {
-            "SWD" | "swd" => Peripheral::Swd,
-            "GeneralUart" | "UART" | "uart" | _ => Peripheral::GeneralUart,
-        };
         AirISP {
             port: matches.get_one::<String>("port").unwrap().to_string(),
             baud: *matches.get_one::<u32>("baud").unwrap(),
@@ -151,15 +138,11 @@ impl AirISP
             before: matches.get_one::<String>("before").unwrap().to_string(),
             after: matches.get_one::<String>("after").unwrap().to_string(),
             language: matches.get_one::<String>("language").unwrap().to_string(),
-            peripheral: pp,
             chip: matches.get_one::<String>("chip").unwrap().to_string(),
+            peripheral: matches.get_one::<String>("peripheral").unwrap().to_string(),
         }
     }
 
-    pub fn get_peripheral(&self) -> Peripheral
-    {
-        self.peripheral
-    }
     pub fn get_port(&self) -> String
     {
         self.port.clone()
@@ -197,6 +180,30 @@ impl AirISP
     pub fn get_chip(&self) -> String
     {
         self.chip.clone()
+    }
+
+    pub fn get_peripheral(&self) -> String
+    {
+        self.peripheral.clone()
+    }
+
+    pub fn get_peripheral_handle(& self) -> Result<peripheral::Peripheral, Box<dyn Error>>
+    {
+        // 全部转换为小写
+        let peripheral = self.get_peripheral().to_lowercase();
+        match peripheral.as_str() {
+            "swd" => {
+                let p = peripheral::Peripheral::Swd(peripheral::swd::Swd::new(&self));
+                Ok(p)
+            },
+            "uart" => {
+                let p = peripheral::Peripheral::GeneralUart(peripheral::general_uart::GeneralUart::new(&self));
+                Ok(p)
+            },
+            _ => {
+                Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "not support peripheral")))
+            }
+        }
     }
 
     pub fn read_file(&self, file_path: &str, address: &mut u32, bin: &mut Vec<u8>) -> Result<(), Box<dyn Error>>
@@ -282,19 +289,4 @@ impl AirISP
         }
         Ok(())
     }
-}
-
-// 实例化一个peripheral
-#[macro_export]
-macro_rules! instantiate_peripheral {
-    ($air_isp:ident) => {
-        match $air_isp.get_peripheral() {
-            AirISP::Peripheral::Swd => {
-                Box::new(peripheral::swd::Swd::new($air_isp)) as Box<dyn peripheral::Pp>
-            },
-            AirISP::Peripheral::GeneralUart | _ => {
-                Box::new(peripheral::general_uart::GeneralUart::new($air_isp)) as Box<dyn peripheral::Pp>
-            }
-        }
-    };
 }
