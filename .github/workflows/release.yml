@@ -70,6 +70,16 @@ jobs:
 
           sudo systemctl start docker
 
+      - name: Windows set static crt #静态链接vc库
+        if: runner.os == 'Windows'
+        run : |
+            New-Item -Path ~/.cargo -ItemType Directory -Force
+            Add-Content ~/.cargo/config ''
+            Add-Content ~/.cargo/config '[target.x86_64-pc-windows-msvc]'
+            Add-Content ~/.cargo/config 'rustflags = ["-C", "target-feature=+crt-static"]'
+            Add-Content ~/.cargo/config '[target.i686-pc-windows-msvc]'
+            Add-Content ~/.cargo/config 'rustflags = ["-C", "target-feature=+crt-static"]'
+
       - name: Install Cross
         run: |
           cargo install cross
