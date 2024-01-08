@@ -11,3 +11,7 @@ pre-build = [
     "apt-get install --assume-yes libusb-1.0-0-dev:arm64 libftdi1-dev:arm64 libudev-dev:arm64 libssl-dev:arm64",
 ]
 
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
+[target.i686-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
