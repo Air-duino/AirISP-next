@@ -53,31 +53,31 @@ pub struct GeneralUart<'a> {
 
 impl GeneralUart<'_> {
     pub fn new(air_isp: &AirISP::AirISP) -> GeneralUart {
-        let mut port = air_isp.get_port();
-        if port == "auto" {
+        let mut port_name = air_isp.get_port();
+        if port_name == "auto" {
             // 选择第一个串口
             let ports = serialport::available_ports().unwrap();
             if ports.len() == 0 {
                 LOG.error(t!("no_serial_port_help").as_str());
                 std::process::exit(AirISP::ExitCode::PpError as i32);
             }
-            port = ports[0].port_name.clone();
+            port_name = ports[0].port_name.clone();
         }
         let mut speed = air_isp.get_baud();
         if speed == 0 {
             speed = 115200; // 默认波特率115200
         }
-        let port = serialport::new(port, speed)
+        let port = serialport::new(port_name.clone(), speed)
             .timeout(std::time::Duration::from_millis(2000))
             .parity(serialport::Parity::Even)
             .open()
             // 显示错误信息，并退出程序
             .unwrap_or_else(|e| {
-                LOG.error(t!("open_serial_fail_help", "TTY" => air_isp.get_port(), "error" => e).as_str());
+                LOG.error(t!("open_serial_fail_help", "TTY" => port_name, "error" => e).as_str());
                 std::process::exit(AirISP::ExitCode::PpError as i32);
             });
 
-        LOG.info(t!("open_serial_success_help", "TTY" => air_isp.get_port()).as_str(),Color::Green);
+        LOG.info(t!("open_serial_success_help", "TTY" => port_name).as_str(), Color::Green);
 
         GeneralUart {
             air_isp,
