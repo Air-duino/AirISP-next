@@ -36,7 +36,7 @@ impl Swd<'_> {
         // session = Session::auto_attach(chip_name, Permissions::default())?;
         if self.air_isp.get_port() == "auto" {
             session = Session::auto_attach(chip_name, Permissions::default())?;
-            return Ok(session)
+            return Ok(session);
         } else {
             let lister = Lister::new();
             let probe_list = lister.list_all();
@@ -46,7 +46,7 @@ impl Swd<'_> {
                     let mut probe = i.open(&lister)?;
                     probe.set_speed(speed)?;
                     session = probe.attach(chip_name, Permissions::default())?;
-                    return Ok(session)
+                    return Ok(session);
                 }
             }
         }
@@ -106,7 +106,7 @@ impl chip_info for Swd<'_> {
         let print_pid = |pid: u16| {
             LOG.info(t!("get_chip_success_help",
                     "chip_id" => format!("{:#04x} {:#04x}", (pid >> 8) & 0xFF, pid & 0xFF),
-                ).as_str(),Color::BrightBlue);
+                ).as_str(), Color::BrightBlue);
         };
         let pid = self.get_chip()?.pid;
         print_pid(pid);
@@ -138,7 +138,7 @@ impl Pp for Swd<'_> {
                         .as_millis() - now_time),
                     "addr" => format!("{:#010x}", address as u32),
                     "size" => format!("{}", data.len())
-                ).as_str(),Color::Green);
+                ).as_str(), Color::Green);
         Ok(())
     }
     fn reset_bootloader(&mut self) -> Result<(), Box<dyn Error>> {
@@ -165,11 +165,11 @@ impl Pp for Swd<'_> {
                     "time" => format!("{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
                         .unwrap()
                         .as_millis() - now_time)
-                ).as_str(),Color::Green);
+                ).as_str(), Color::Green);
         Ok(())
     }
     fn reset_app(&mut self) -> Result<(), Box<dyn Error>> {
-        LOG.info(t!("leaving_help").as_str(),Color::Blue);
+        LOG.info(t!("leaving_help").as_str(), Color::Blue);
         let mut session = self.get_chip_session()?;
         session.core(0)?.reset()?;
         Ok(())
