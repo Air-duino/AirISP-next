@@ -5,6 +5,7 @@ mod AirISP;
 mod get;
 mod chip_info;
 mod hex_to_bin;
+mod log;
 
 use colored::*;
 

@@ -7,6 +7,7 @@ use rust_i18n::t;
 use crate::{get, hex_to_bin, write_flash};
 use std::path::Path;
 use std::string::String;
+use crate::log::LOG;
 use crate::peripheral;
 
 #[derive(PartialEq)]
@@ -14,6 +15,13 @@ pub enum Progress {
     None,
     Bar,
     Percent,
+}
+
+#[repr(i32)]
+pub enum ExitCode {
+    Success = 0,
+    PpError = 2, // 外设相关错误
+    FileError = 3, // 文件相关错误
 }
 
 pub fn air_isp() -> Command
@@ -118,7 +126,6 @@ pub struct AirISP {
     port: String,
     baud: u32,
     chip: String,
-    trace: bool,
     connect_attempts: u32,
     before: String,
     after: String,
@@ -133,7 +140,6 @@ impl AirISP
         AirISP {
             port: matches.get_one::<String>("port").unwrap().to_string(),
             baud: *matches.get_one::<u32>("baud").unwrap(),
-            trace: *matches.get_one::<bool>("trace").unwrap(),
             connect_attempts: *matches.get_one::<u32>("connect_attempts").unwrap(),
             before: matches.get_one::<String>("before").unwrap().to_string(),
             after: matches.get_one::<String>("after").unwrap().to_string(),
@@ -151,12 +157,6 @@ impl AirISP
     {
         self.baud
     }
-
-    pub fn get_trace(&self) -> bool
-    {
-        self.trace
-    }
-
     pub fn get_connect_attempts(&self) -> u32
     {
         self.connect_attempts

@@ -1,13 +1,16 @@
+use std::error::Error;
+
+use colored::{Color, Colorize};
+use probe_rs::{flashing, MemoryInterface, Permissions, Session};
+use probe_rs::flashing::DownloadOptions;
+use rust_i18n::t;
+
+use crate::AirISP;
+use crate::log::LOG;
 use crate::peripheral;
 use crate::peripheral::Pp;
+
 use super::{chip_info, CHIPS};
-use crate::AirISP;
-use colored::Colorize;
-use probe_rs::flashing::DownloadOptions;
-use probe_rs::{flashing, Permissions, Session, MemoryInterface};
-use rust_i18n::t;
-use std::error::Error;
-use crate::chip_info::ChipInfo;
 
 pub struct Swd<'a> {
     air_isp: &'a AirISP::AirISP,
@@ -24,7 +27,7 @@ impl Swd<'_> {
 
     fn get_chip_session(&mut self) -> Result<Session, Box<dyn Error>> {
         let mut session;
-        let mut chip_name= self.target.clone();
+        let mut chip_name = self.target.clone();
         session = Session::auto_attach(chip_name, Permissions::default())?;
         Ok(session)
     }
@@ -55,8 +58,8 @@ impl chip_info for Swd<'_> {
             let mut core = session.core(0)?;
             let index = CHIPS.iter().position(|r| {
                 r.name
-                    .to_lowercase()
-                    .contains(self.air_isp.get_chip().as_str())
+                 .to_lowercase()
+                 .contains(self.air_isp.get_chip().as_str())
             });
 
             let chip = match index {
@@ -68,7 +71,7 @@ impl chip_info for Swd<'_> {
                     )));
                 }
             };
-            return Ok(chip)
+            return Ok(chip);
         };
         Err(Box::new(std::io::Error::new(
             std::io::ErrorKind::Other,
@@ -77,16 +80,9 @@ impl chip_info for Swd<'_> {
     }
     fn get_chip_pid(&mut self) -> Result<u32, Box<dyn Error>> {
         let print_pid = |pid: u16| {
-            println!(
-                "{}",
-                format!(
-                    "{}",
-                    t!("get_chip_success_help",
+            LOG.info(t!("get_chip_success_help",
                     "chip_id" => format!("{:#04x} {:#04x}", (pid >> 8) & 0xFF, pid & 0xFF),
-                    )
-                )
-                    .bright_blue()
-            );
+                ).as_str(),Color::BrightBlue);
         };
         let pid = self.get_chip()?.pid;
         print_pid(pid);
@@ -103,26 +99,22 @@ impl Pp for Swd<'_> {
     ) -> Result<(), Box<dyn Error>> {
         let mut session = self.get_chip_session()?;
         let mut loader = session.target().flash_loader();
-        println!(
-            "{}",
-            format!("{}", t!("write_flash_file_help")).bright_blue()
-        );
+
+        LOG.info(t!("write_flash_file_help").as_str(), Color::BrightBlue);
         let now_time = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_millis();
         loader.add_data(address as u64, data)?;
         loader.commit(&mut session, DownloadOptions::default())?;
-        println!("{}",
-                 format!("{}",
-                         t!("write_flash_success_help",
-                       "time" => format!("{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
-                           .unwrap()
-                           .as_millis() - now_time),
-                        "addr" => format!("{:#010x}", address as u32),
-                        "size" => format!("{}", data.len())
-                    )).bright_white()
-        );
+
+        LOG.info(t!("write_flash_success_help",
+                    "time" => format!("{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis() - now_time),
+                    "addr" => format!("{:#010x}", address as u32),
+                    "size" => format!("{}", data.len())
+                ).as_str(),Color::Green);
         Ok(())
     }
     fn reset_bootloader(&mut self) -> Result<(), Box<dyn Error>> {
@@ -135,7 +127,7 @@ impl Pp for Swd<'_> {
         self.get_chip_pid()?;
         Ok(())
     }
-    
+
     fn erase_all(&mut self) -> Result<(), Box<dyn Error>> {
         println!("{}", format!("{}", t!("erase_all_help")).bright_blue());
         let now_time = std::time::SystemTime::now()
@@ -144,15 +136,16 @@ impl Pp for Swd<'_> {
             .as_millis();
         let mut session = self.get_chip_session()?;
         flashing::erase_all(&mut session, None)?;
-        println!("{}",
-                 format!("{}",
-                         t!("erase_all_success_help",
-                                   "time" => format!("{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() - now_time)))
-                     .green());
+
+        LOG.info(t!("erase_all_success_help",
+                    "time" => format!("{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis() - now_time)
+                ).as_str(),Color::Green);
         Ok(())
     }
     fn reset_app(&mut self) -> Result<(), Box<dyn Error>> {
-        println!("{}", format!("{}", t!("leaving_help")).white());
+        LOG.info(t!("leaving_help").as_str(),Color::Blue);
         let mut session = self.get_chip_session()?;
         session.core(0)?.reset()?;
         Ok(())

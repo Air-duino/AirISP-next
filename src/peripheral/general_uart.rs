@@ -1,7 +1,7 @@
 use crate::peripheral;
 use crate::peripheral::Pp;
 use crate::AirISP;
-use colored::Colorize;
+use colored::{Color, Colorize};
 use rust_i18n::t;
 use serialport::SerialPort;
 use std::error::Error;
@@ -11,6 +11,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::runtime::Runtime;
 use crate::chip_info::ChipInfo;
+use crate::log::LOG;
 
 use super::chip_info;
 
@@ -58,21 +59,11 @@ impl GeneralUart<'_> {
             .open()
             // 显示错误信息，并退出程序
             .unwrap_or_else(|e| {
-                eprintln!(
-                    "{}",
-                    t!("open_serial_fail_help", "TTY" => air_isp.get_port(), "error" => e)
-                );
-                std::process::exit(1);
+                LOG.error(t!("open_serial_fail_help", "TTY" => air_isp.get_port(), "error" => e).as_str());
+                std::process::exit(AirISP::ExitCode::PpError as i32);
             });
 
-        println!(
-            "{}",
-            format!(
-                "{}",
-                t!("open_serial_success_help", "TTY" => air_isp.get_port())
-            )
-                .green()
-        );
+        LOG.info(t!("open_serial_success_help", "TTY" => air_isp.get_port()).as_str(),Color::Green);
 
         GeneralUart {
             air_isp,
@@ -172,16 +163,14 @@ impl Pp for GeneralUart<'_> {
         }
 
         println!();
-        println!("{}",
-                 format!("{}",
-                         t!("write_flash_success_help",
-                       "time" => format!("{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
-                           .unwrap()
-                           .as_millis() - now_time),
-                        "addr" => format!("{:#010x}", address as u32),
-                        "size" => format!("{}", data.len())
-                    )).bright_white()
-        );
+
+        LOG.info(t!("write_flash_success_help",
+                    "time" => format!("{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis() - now_time),
+                    "addr" => format!("{:#010x}", address as u32),
+                    "size" => format!("{}", data.len())
+        ).as_str(),Color::Green);
         println!();
 
         Ok(())
@@ -204,13 +193,7 @@ impl Pp for GeneralUart<'_> {
         for i in 0..data_len {
             chip_id.push_str(&format!("{:#04x} ", data_buf[i]));
         }
-        println!(
-            "{}",
-            format!(
-                "{}",
-                t!("get_chip_success_help","chip_id" => chip_id).cyan()
-            )
-        );
+        LOG.info(t!("get_chip_success_help","chip_id" => chip_id).as_str(),Color::Blue);
         Ok(())
     }
 
@@ -377,10 +360,10 @@ impl Pp for GeneralUart<'_> {
                 let run_time = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
                     .unwrap()
                     .as_millis() - now_time;
-                println!("{}", format!("{}",
-                                       t!("erase_all_success_help",
-                                        "time" => format!("{}", run_time)
-                                       )).green());
+
+                LOG.info(t!("erase_all_success_help",
+                            "time" => format!("{}", run_time)
+                ).as_str(),Color::Green);
             }
             Err(_) => {
                 println!("{}", format!("{}", t!("erase_all_fail_help")).red());
@@ -391,9 +374,7 @@ impl Pp for GeneralUart<'_> {
     }
 
     fn reset_app(&mut self) -> Result<(), Box<dyn Error>> {
-        println!("{}",
-                 format!("{}", t!("leaving_help")).white()
-        );
+        LOG.info(t!("leaving_help").as_str(),Color::Blue);
         match self.air_isp.get_after().as_str() {
             // 硬件复位
             "hard_reset" => {
@@ -416,9 +397,7 @@ impl Pp for GeneralUart<'_> {
                     }
                 }
 
-                println!("{}",
-                         format!("{}", t!("leaving_hard_reset_help")).white()
-                );
+                LOG.info(t!("leaving_hard_reset_help").as_str(),Color::Green);
             },
             _ => {
                 todo!()
