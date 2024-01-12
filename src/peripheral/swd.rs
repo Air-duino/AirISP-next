@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use colored::{Color, Colorize};
-use probe_rs::{flashing, MemoryInterface, Permissions, Session};
+use probe_rs::{flashing, Lister, MemoryInterface, Permissions, Session};
 use probe_rs::flashing::DownloadOptions;
 use rust_i18n::t;
 
@@ -26,10 +26,34 @@ impl Swd<'_> {
     }
 
     fn get_chip_session(&mut self) -> Result<Session, Box<dyn Error>> {
-        let mut session;
-        let mut chip_name = self.target.clone();
-        session = Session::auto_attach(chip_name, Permissions::default())?;
-        Ok(session)
+        let session;
+        let chip_name = self.target.clone();
+        let mut speed = self.air_isp.get_baud();
+        if speed == 0 {
+            speed = 200; // 默认速度200k
+        }
+
+        // session = Session::auto_attach(chip_name, Permissions::default())?;
+        if self.air_isp.get_port() == "auto" {
+            session = Session::auto_attach(chip_name, Permissions::default())?;
+            return Ok(session)
+        } else {
+            let lister = Lister::new();
+            let probe_list = lister.list_all();
+            for i in probe_list {
+                // 输入的端口名称和扫描到的名称子串匹配
+                if i.identifier.to_lowercase().contains(self.air_isp.get_port().as_str()) {
+                    let mut probe = i.open(&lister)?;
+                    probe.set_speed(speed)?;
+                    session = probe.attach(chip_name, Permissions::default())?;
+                    return Ok(session)
+                }
+            }
+        }
+        Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "get probe fail",
+        )))
     }
 }
 
