@@ -48,7 +48,7 @@ pub fn air_isp() -> Command
         .long("baud")
         .help(t!("baud_help"))
         .value_parser(value_parser! { u32 })
-        .default_value("115200");
+        .default_value("0");
 
     let trace = Arg::new("trace")
         .global(true)
