@@ -53,7 +53,21 @@ pub struct GeneralUart<'a> {
 
 impl GeneralUart<'_> {
     pub fn new(air_isp: &AirISP::AirISP) -> GeneralUart {
-        let port = serialport::new(air_isp.get_port(), air_isp.get_baud())
+        let mut port = air_isp.get_port();
+        if port == "auto" {
+            // 选择第一个串口
+            let ports = serialport::available_ports().unwrap();
+            if ports.len() == 0 {
+                LOG.error(t!("no_serial_port_help").as_str());
+                std::process::exit(AirISP::ExitCode::PpError as i32);
+            }
+            port = ports[0].port_name.clone();
+        }
+        let mut speed = air_isp.get_baud();
+        if speed == 0 {
+            speed = 115200; // 默认波特率115200
+        }
+        let port = serialport::new(port, speed)
             .timeout(std::time::Duration::from_millis(2000))
             .parity(serialport::Parity::Even)
             .open()
