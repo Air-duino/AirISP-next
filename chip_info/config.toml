@@ -1,24 +1,24 @@
+[[air32f103]]
+name = "Air32F103CB"
+pid = 0x0410
+debug_idcode_reg = 0xFFFFFFFF
+flash_size_reg = 0xFFFFFFFF
+flash_size = 0x8000
+ram_size = 0x1000
+uid_reg = 0xFFFFFFFF
+
+[[air32f103]]
+name = "Air32F103CC"
+pid = 0x0410
+debug_idcode_reg = 0xFFFFFFFF
+flash_size_reg = 0xFFFFFFFF
+flash_size = 0x8000
+ram_size = 0x1000
+uid_reg = 0xFFFFFFFF
+
 [[air001]]
 name = "Air001"
 pid = 0x0440
-debug_idcode_reg = 0xFFFFFFFF
-flash_size_reg = 0xFFFFFFFF
-flash_size = 0x8000
-ram_size = 0x1000
-uid_reg = 0xFFFFFFFF
-
-[[air32f103]]
-name = "Air32F103xB"
-pid = 0x0410
-debug_idcode_reg = 0xFFFFFFFF
-flash_size_reg = 0xFFFFFFFF
-flash_size = 0x8000
-ram_size = 0x1000
-uid_reg = 0xFFFFFFFF
-
-[[air32f103]]
-name = "Air32F103xC"
-pid = 0x0410
 debug_idcode_reg = 0xFFFFFFFF
 flash_size_reg = 0xFFFFFFFF
 flash_size = 0x8000
