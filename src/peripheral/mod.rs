@@ -3,11 +3,10 @@ pub mod swd;
 use std::error::Error;
 use crate::{AirISP, peripheral};
 
-use serde::Deserialize;
 include!(concat!(env!("OUT_DIR"), "/chips.rs"));
 
 pub trait chip_info {
-    fn get_chip(&mut self) -> Result<&ChipInfo, Box<dyn Error>>;
+    fn get_chip_info(&mut self) -> Result<&ChipInfo, Box<dyn Error>>;
     fn get_chip_pid(&mut self) -> Result<u32, Box<dyn Error>>;
 }
 

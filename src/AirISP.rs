@@ -22,6 +22,7 @@ pub enum ExitCode {
     Success = 0,
     PpError = 2, // 外设相关错误
     FileError = 3, // 文件相关错误
+    NoMatchChip = 4, //没有匹配的芯片 
 }
 
 pub fn air_isp() -> Command
@@ -39,7 +40,6 @@ pub fn air_isp() -> Command
         .short('c')
         .long("chip")
         .help(t!("chip_help"))
-        .value_parser(["auto", "air001", "air32"])
         .default_value("auto");
 
     let baud = Arg::new("baud")

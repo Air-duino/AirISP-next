@@ -422,7 +422,7 @@ impl Pp for GeneralUart<'_> {
 }
 
 impl chip_info for GeneralUart<'_> {
-    fn get_chip(&mut self) -> Result<&peripheral::ChipInfo, Box<dyn Error>> {
+    fn get_chip_info(&mut self) -> Result<&peripheral::ChipInfo, Box<dyn Error>> {
         todo!()
     }
     fn get_chip_pid(&mut self) -> Result<u32, Box<dyn Error>> {
