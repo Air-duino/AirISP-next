@@ -153,8 +153,23 @@ leaving_hard_reset_help:
   zh-CN: "通过 RTS 硬件复位，如失败请尝试手动复位"
   en: "Hard reset via RTS, if unsuccessful please try manual reset"
   ja: "RTS経由でハードリセット、失敗した場合は手動リセットを試みてください"
-  
-swd_get_chip_fail_help:
-  zh-CN: "SWD模式获取芯片ID失败"
-  en: "Failed to get chip ID in SWD mode"
-  ja: "SWDモードでチップIDを取得できませんでした"
+
+swd_read_debug_idcode_fail_help:
+  zh-CN: "读取 Debug_IDCODE 失败！地址: %{addr}"
+  en: "Failed to read Debug_IDCODE! Address: %{addr}"
+  ja: "Debug_IDCODEの読み取りに失敗しました！アドレス: 0x%{addr}"
+
+swd_pid_not_match_help:
+  zh-CN: "芯片PID不匹配，假设为 %{set_pid}，实际为 %{real_pid}"
+  en: "Chip PID does not match, assuming %{set_pid}, actual is %{real_pid}"
+  ja: "チップPIDが一致しません、%{set_pid} と仮定しています、実際は %{real_pid}"
+
+swd_pid_not_match_unknown_help:
+  zh-CN: "没有找到匹配的芯片，请设定更详细的芯片或者与作者联系……"
+  en: "No matching chip found, please set a more detailed chip or contact the author..."
+  ja: "一致するチップが見つかりませんでした、より詳細なチップを設定するか、作者に連絡してください..."
+
+swd_pid_not_match_unknown_no_pid_help:
+  zh-CN: "没有详细的idcode寄存器地址，将不会检查pid"
+  en: "No detailed idcode register address, pid will not be checked"
+  ja: "詳細なidcodeレジスタアドレスがないため、pidはチェックされません"
