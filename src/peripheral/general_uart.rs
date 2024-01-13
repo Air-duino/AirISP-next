@@ -10,7 +10,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::runtime::Runtime;
-use crate::chip_info::ChipInfo;
 use crate::log::LOG;
 
 use super::chip_info;

@@ -3,7 +3,6 @@ mod write_flash;
 mod peripheral;
 mod AirISP;
 mod get;
-mod chip_info;
 mod hex_to_bin;
 mod log;
 

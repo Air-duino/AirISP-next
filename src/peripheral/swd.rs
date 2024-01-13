@@ -10,7 +10,8 @@ use crate::log::LOG;
 use crate::peripheral;
 use crate::peripheral::Pp;
 
-use super::{chip_info, CHIPS};
+use crate::peripheral::{chip_info, CHIPS, ChipInfo, ChipFamily};
+
 
 pub struct Swd<'a> {
     air_isp: &'a AirISP::AirISP,
@@ -61,46 +62,47 @@ impl chip_info for Swd<'_> {
     fn get_chip(&mut self) -> Result<&peripheral::ChipInfo, Box<dyn Error>> {
         // 自动判断芯片型号
         if self.air_isp.get_chip() == "auto" {
-            for i in CHIPS.iter() {
-                // 0xFFFFFFFF 证明暂且未知，因此假设就是这个芯片，不进行进一步的判断
-                if i.debug_idcode_reg == 0xFFFFFFFF {
-                    return Ok(i);
-                } else {
-                    let mut session = Session::auto_attach("cortex-m0", Permissions::default())?; // 默认使用m0去连接，一般可以连上
-                    let mut core = session.core(0)?;
-                    let mut pid = core.read_word_32(i.debug_idcode_reg as u64)?;
-                    if pid != i.pid as u32 {
-                        continue;
-                    }
-                    return Ok(i);
-                }
-            }
+            // for i in CHIPS.iter() {
+            //     // 0xFFFFFFFF 证明暂且未知，因此假设就是这个芯片，不进行进一步的判断
+            //     return if i.debug_idcode_reg == 0xFFFFFFFF {
+            //         Ok(i)
+            //     } else {
+            //         let mut session = Session::auto_attach("cortex-m0", Permissions::default())?; // 默认使用m0去连接，一般可以连上
+            //         let mut core = session.core(0)?;
+            //         let pid = core.read_word_32(i.debug_idcode_reg as u64)?;
+            //         if pid != i.pid as u32 {
+            //             continue;
+            //         }
+            //         Ok(i)
+            //     };
+            // }
         } //if self.air_isp.get_chip() == "auto"
         else // 有具体的型号
         {
-            let mut session = self.get_chip_session()?;
-            let mut core = session.core(0)?;
-            let index = CHIPS.iter().position(|r| {
-                r.name
-                 .to_lowercase()
-                 .contains(self.air_isp.get_chip().as_str())
-            });
-
-            let chip = match index {
-                Some(i) => &CHIPS[i],
-                None => {
-                    return Err(Box::new(std::io::Error::new(
-                        std::io::ErrorKind::Other,
-                        "get chip fail",
-                    )));
-                }
-            };
-            return Ok(chip);
+            // let mut session = self.get_chip_session()?;
+            // let mut core = session.core(0)?;
+            // let index = CHIPS.iter().position(|r| {
+            //     r.name
+            //      .to_lowercase()
+            //      .contains(self.air_isp.get_chip().as_str())
+            // });
+            //
+            // match index {
+            //     Some(i) => {
+            //         return Ok(&CHIPS[i]);
+            //     }
+            //     None => {
+            //
+            //     }
+            // };
         };
-        Err(Box::new(std::io::Error::new(
+
+        // 都没有找到，返回错误
+        LOG.error(t!("swd_get_chip_fail_help").as_str());
+        return Err(Box::new(std::io::Error::new(
             std::io::ErrorKind::Other,
             "get chip fail",
-        )))
+        )));
     }
     fn get_chip_pid(&mut self) -> Result<u32, Box<dyn Error>> {
         let print_pid = |pid: u16| {
