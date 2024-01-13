@@ -153,3 +153,8 @@ leaving_hard_reset_help:
   zh-CN: "通过 RTS 硬件复位，如失败请尝试手动复位"
   en: "Hard reset via RTS, if unsuccessful please try manual reset"
   ja: "RTS経由でハードリセット、失敗した場合は手動リセットを試みてください"
+  
+swd_get_chip_fail_help:
+  zh-CN: "SWD模式获取芯片ID失败"
+  en: "Failed to get chip ID in SWD mode"
+  ja: "SWDモードでチップIDを取得できませんでした"
