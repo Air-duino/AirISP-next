@@ -29,6 +29,8 @@ fn parse_hex(s: &str) -> u32 {
 
 fn hash_map_to_file(map: HashMap<String, ChipFamily>, dest_path: &PathBuf) {
     let struct_str = r#"use lazy_static::lazy_static;
+
+#[derive(Debug, Clone)]
 pub struct ChipInfo {
     pub name: &'static str,
     pub debug_idcode_reg: u32,
@@ -41,7 +43,7 @@ pub struct ChipInfo {
 
 pub struct ChipFamily {
     family: &'static str,
-    chip: Vec<ChipInfo>,
+    info: Vec<ChipInfo>,
 }
     "#;
 
@@ -54,7 +56,7 @@ pub struct ChipFamily {
             "\t\tChipFamily {{ \n",
         ));
         chip.push_str(&format!(
-            "\t\t\tfamily: \"{}\", chip: vec![\n",
+            "\t\t\tfamily: \"{}\", info: vec![\n",
             family
         ));
         for chip_info in config.chip.iter() {
