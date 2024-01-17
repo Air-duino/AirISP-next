@@ -116,6 +116,6 @@ jobs:
       
       - name: Build
         run: |
-          cross tauri build --release --target ${{ matrix.target.name }}
+          cross tauri build --target ${{ matrix.target.name }}
 
   
