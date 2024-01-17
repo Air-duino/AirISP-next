@@ -27,9 +27,9 @@ jobs:
           - name: x86_64-pc-windows-msvc
             file_name : "windows-x86_64"
             os: windows-latest
-          # - name: aarch64-pc-windows-msvc
-          #   file_name: "windows-aarch64"
-          #   os: windows-latest
+          - name: aarch64-pc-windows-msvc
+            file_name: "windows-aarch64"
+            os: windows-latest
           
           - name: x86_64-apple-darwin
             file_name : "macos-x86_64"
