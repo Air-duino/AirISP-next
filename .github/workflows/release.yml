@@ -2,123 +2,92 @@ name: release
 
 on:
   push:
-    tags:
-    - '*'
+    # tags:
+    # - '*'
   workflow_dispatch:
 
 jobs:
-  build:
+  release:
+    permissions:
+      contents: write
     strategy:
+      fail-fast: false
       matrix:
-        target: 
-          - name: x86_64-unknown-linux-gnu
-            file_name : "linux-x86_64"
-            os: ubuntu-latest
-          - name: aarch64-unknown-linux-gnu
-            file_name : "linux-aarch64"
-            os: ubuntu-latest
-          
-#          - name: i686-pc-windows-msvc
-#            file_name : "windows-x86"
-#            os: windows-latest
-          - name: x86_64-pc-windows-msvc
-            file_name : "windows-x86_64"
-            os: windows-latest
-          - name: aarch64-pc-windows-msvc
-            file_name: "windows-aarch64"
-            os: windows-latest
-          
-          - name: x86_64-apple-darwin
-            file_name : "macos-x86_64"
-            os: macos-latest
-          - name: aarch64-apple-darwin
-            file_name : "macos-aarch64"
-            os: macos-latest
-
-    runs-on: ${{ matrix.target.os }}
+        platform: [macos-latest, ubuntu-20.04, windows-latest]
+    runs-on: ${{ matrix.platform }}
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target.name }}
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Install dependencies
-      
-        if: runner.os == 'Linux'
+      - name: Install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-20.04'
+        # You can remove libayatana-appindicator3-dev if you don't use the system tray feature.
         run: |
           sudo apt-get update
-          sudo apt-get upgrade -y
-          sudo apt-get install -y libudev-dev libusb-1.0-0-dev libssl-dev pkg-config
-          sudo apt install libhidapi-dev -y
-          for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg -y; done
-          # Add Docker's official GPG key:
-          sudo apt-get update -y
-          sudo apt-get install -y ca-certificates curl gnupg
-          sudo install -m 0755 -d /etc/apt/keyrings
-          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-          sudo chmod a+r /etc/apt/keyrings/docker.gpg
-          
-          # Add the repository to Apt sources:
-          echo \
-            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-            $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-          sudo apt-get update -y
-          sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libayatana-appindicator3-dev librsvg2-dev
 
-          sudo systemctl start docker
+      - name: Rust setup
+        uses: dtolnay/rust-toolchain@stable
 
-      - name: Windows set static crt #静态链接vc库
-        if: runner.os == 'Windows'
-        run : |
-            New-Item -Path ~/.cargo -ItemType Directory -Force
-            Add-Content ~/.cargo/config ''
-            Add-Content ~/.cargo/config '[target.x86_64-pc-windows-msvc]'
-            Add-Content ~/.cargo/config 'rustflags = ["-C", "target-feature=+crt-static"]'
-            Add-Content ~/.cargo/config '[target.i686-pc-windows-msvc]'
-            Add-Content ~/.cargo/config 'rustflags = ["-C", "target-feature=+crt-static"]'
-
-      - name: Install Cross
-        run: |
-          cargo install cross
-
-      - name: Build
-        run: |
-          cross build --release --target ${{ matrix.target.name }}
-
-      - name: Windows package # 将编译好的二进制文件打包，如果是Windows就打包exe文件，其它系统打包AirISP*文件
-        if: runner.os == 'Windows'
-        run : |
-            mkdir -p ${{ github.workspace }}/release
-            cd target/${{ matrix.target.name }}/release
-            mkdir ${{ github.workspace }}/release/AirISP-next/
-            cp AirISP-next.exe ${{ github.workspace }}/release/AirISP-next/
-            cd ${{ github.workspace }}/release
-            7z a -tzip ${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.zip AirISP-next
-
-      - name: Package
-        if: runner.os != 'Windows'
-        run : |
-            mkdir -p ${{ github.workspace }}/release
-            cd target/${{ matrix.target.name }}/release
-            chmod +x AirISP-next
-            mkdir ${{ github.workspace }}/release/AirISP-next/
-            cp AirISP-next ${{ github.workspace }}/release/AirISP-next/
-            cd ${{ github.workspace }}/release
-            tar zcvf ${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.tar.gz AirISP-next
-
-      - name: Create Windows release
-        if: runner.os == 'Windows'
-        uses: ncipollo/release-action@v1
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
         with:
-          allowUpdates: true
-          artifacts: "${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.zip"
+          workspaces: './src-tauri -> target'
 
-      - name: Create release
-        if: runner.os != 'Windows'
-        uses: ncipollo/release-action@v1
+      - name: Sync node version and setup cache
+        uses: actions/setup-node@v4
         with:
-          allowUpdates: true
-          artifacts: "${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.tar.gz"
+          node-version: 'lts/*'
+          cache: 'pnpm' # Set this to npm, yarn or pnpm.
+
+      - name: Install frontend dependencies
+        # If you don't have `beforeBuildCommand` configured you may want to build your frontend here too.
+        run: pnpm install # Change this to npm, yarn or pnpm.
+
+      - name: Build the app
+        uses: tauri-apps/tauri-action@v0
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }} # This only works if your workflow triggers on new tags.
+          releaseName: 'App Name v__VERSION__' # tauri-action replaces \_\_VERSION\_\_ with the app version.
+          releaseBody: 'See the assets to download and install this version.'
+          releaseDraft: true
+          prerelease: false
+
+      # - name: Windows package # 将编译好的二进制文件打包，如果是Windows就打包exe文件，其它系统打包AirISP*文件
+      #   if: runner.os == 'Windows'
+      #   run : |
+      #       mkdir -p ${{ github.workspace }}/release
+      #       cd target/${{ matrix.target.name }}/release
+      #       mkdir ${{ github.workspace }}/release/AirISP-next/
+      #       cp AirISP-next.exe ${{ github.workspace }}/release/AirISP-next/
+      #       cd ${{ github.workspace }}/release
+      #       7z a -tzip ${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.zip AirISP-next
+
+      # - name: Package
+      #   if: runner.os != 'Windows'
+      #   run : |
+      #       mkdir -p ${{ github.workspace }}/release
+      #       cd target/${{ matrix.target.name }}/release
+      #       chmod +x AirISP-next
+      #       mkdir ${{ github.workspace }}/release/AirISP-next/
+      #       cp AirISP-next ${{ github.workspace }}/release/AirISP-next/
+      #       cd ${{ github.workspace }}/release
+      #       tar zcvf ${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.tar.gz AirISP-next
+
+      # - name: Create Windows release
+      #   if: runner.os == 'Windows'
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     allowUpdates: true
+      #     artifacts: "${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.zip"
+
+      # - name: Create release
+      #   if: runner.os != 'Windows'
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     allowUpdates: true
+      #     artifacts: "${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.tar.gz"
