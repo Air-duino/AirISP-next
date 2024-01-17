@@ -61,7 +61,7 @@ jobs:
           node-version: 'lts/*'
           cache: 'pnpm' # Set this to npm, yarn or pnpm.
       - run: pnpm install
-      
+
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -104,13 +104,13 @@ jobs:
             Add-Content ~/.cargo/config '[target.i686-pc-windows-msvc]'
             Add-Content ~/.cargo/config 'rustflags = ["-C", "target-feature=+crt-static"]'
 
-      - name: Install Cross and tauri-cki
-        run: |
+      # - name: Install Cross and tauri-cki
+      #   run: |
 
-          cargo install tauri-cli
+      #     cargo install tauri-cli
       
       - name: Build
         run: |
-          cargo tauri build --target ${{ matrix.target.name }}
+          pnpm tauri build --target ${{ matrix.target.name }}
 
   
