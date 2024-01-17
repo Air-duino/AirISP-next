@@ -16,10 +16,10 @@ jobs:
         target: 
           - name: x86_64-unknown-linux-gnu
             file_name : "linux-x86_64"
-            os: ubuntu-20.04
+            os: ubuntu-22.04
           - name: aarch64-unknown-linux-gnu
             file_name : "linux-aarch64"
-            os: ubuntu-20.04
+            os: ubuntu-22.04
           
 #          - name: i686-pc-windows-msvc
 #            file_name : "windows-x86"
@@ -88,11 +88,6 @@ jobs:
             Add-Content ~/.cargo/config 'rustflags = ["-C", "target-feature=+crt-static"]'
             Add-Content ~/.cargo/config '[target.i686-pc-windows-msvc]'
             Add-Content ~/.cargo/config 'rustflags = ["-C", "target-feature=+crt-static"]'
-
-      # - name: Install Cross and tauri-cki
-      #   run: |
-
-      #     cargo install tauri-cli
       
       - uses: tauri-apps/tauri-action@v0
         env:
