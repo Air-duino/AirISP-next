@@ -113,4 +113,7 @@ fn creat_chip_info() {
 
 fn main() {
     creat_chip_info();
+    tauri_build::build()
 }
+
+

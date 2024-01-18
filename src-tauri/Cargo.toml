@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.4.8", features = ["derive"] }
-serde = "1.0.192"
+serde = { version="1.0.192", features = ["derive"] }
 serde_derive = { version = "1.0.192", features = [] }
 whoami = "1.4.1"
 serialport = "4.3.0"
@@ -21,8 +21,20 @@ probe-rs = { git = "https://github.com/Air-duino/probe-rs.git", branch = "new_ta
 log = "0.4.20"
 lazy_static = "1.4.0"
 chrono = "0.4.31"
+tauri = { version = "1.5", features = ["shell-open"] }
+serde_json = "1.0"
 
 [build-dependencies]
 serde = "1.0"
 serde_derive = "1.0"
 toml = "0.8.8"
+tauri-build = { version = "1.5", features = [] }
+
+
+[features]
+# this feature is used for production builds or when `devPath` points to the filesystem
+# DO NOT REMOVE!!
+custom-protocol = ["tauri/custom-protocol"]
+
+[target."cfg(windows)".dependencies]
+windows = { version = "0.52.0", features = ["Win32_System_Console", "Win32_Foundation"] }

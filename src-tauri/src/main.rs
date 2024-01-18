@@ -1,4 +1,7 @@
 #![allow(non_snake_case)]
+// Prevents additional console window on Windows in release, DO NOT REMOVE!!
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 mod write_flash;
 mod peripheral;
 mod AirISP;
@@ -9,6 +12,12 @@ mod log;
 use colored::*;
 
 rust_i18n::i18n!("i18n");
+
+// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
+#[tauri::command]
+fn greet(name: &str) -> String {
+    format!("Hello, {}! You've been greeted from Rust!", name)
+}
 
 fn default_language() {
     let language = whoami::lang().collect::<Vec<String>>();
@@ -41,7 +50,7 @@ fn set_language(air_isp: &AirISP::AirISP) {
     rust_i18n::set_locale(&language);
 }
 
-fn main() {
+fn cli() {
     default_language();
     let matches = AirISP::air_isp().get_matches();
 
@@ -65,4 +74,27 @@ fn main() {
             }
         }
     }
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() > 1 {
+        #[cfg(windows)]
+        {
+            use windows::Win32::System::Console::{AttachConsole, ATTACH_PARENT_PROCESS};
+            // we ignore the result here because
+            // if the app started from a command line, like cmd or powershell,
+            // it will attach sucessfully which is what we want
+            // but if we were started from something like explorer,
+            // it will fail to attach console which is also what we want.
+            let _ = unsafe { AttachConsole(ATTACH_PARENT_PROCESS) };
+        }
+        cli();
+        return;
+    }
+    
+    tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![greet])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }
