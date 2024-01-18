@@ -19,7 +19,7 @@
     },
     "bundle": {
       "active": true,
-      "targets": "all",
+      "targets": ["deb", "nsis", "app", "dmg", "updater"],
       "identifier": "com.airisp-next.app",
       "icon": [
         "icons/32x32.png",
