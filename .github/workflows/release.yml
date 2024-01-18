@@ -116,7 +116,7 @@ jobs:
         with:
           base_image: raspios_lite_arm64:latest
           cpu: cortex-a53
-          bind_mount_repository: true
+          # bind_mount_repository: true
           image_additional_mb: 10240
           optimize_image: false
           commands: |
