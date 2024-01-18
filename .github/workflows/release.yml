@@ -2,8 +2,8 @@ name: release
 
 on:
   push:
-    # tags:
-    # - '*'
+    tags:
+    - '*'
   workflow_dispatch:
 
 jobs:
@@ -95,6 +95,41 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: --target ${{ matrix.target.name }}
+      
+      - name: Windows package # 将编译好的二进制文件打包，如果是Windows就打包exe文件，其它系统打包AirISP*文件
+        if: runner.os == 'Windows'
+        run : |
+            mkdir -p ${{ github.workspace }}/release
+            cd src-tauri/target/${{ matrix.target.name }}/release
+            mkdir ${{ github.workspace }}/release/AirISP-next/
+            cp AirISP-next.exe ${{ github.workspace }}/release/AirISP-next/
+            cd ${{ github.workspace }}/release
+            7z a -tzip ${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.zip AirISP-next
+
+      - name: Package
+        if: runner.os != 'Windows'
+        run : |
+            mkdir -p ${{ github.workspace }}/release
+            cd src-tauri/target/${{ matrix.target.name }}/release
+            chmod +x AirISP-next
+            mkdir ${{ github.workspace }}/release/AirISP-next/
+            cp AirISP-next ${{ github.workspace }}/release/AirISP-next/
+            cd ${{ github.workspace }}/release
+            tar zcvf ${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.tar.gz AirISP-next
+
+      - name: Create Windows release
+        if: runner.os == 'Windows'
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifacts: "${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.zip, src-tauri/target/${{ matrix.target.name }}/release/bundle/nsis/*.exe"
+
+      - name: Create release
+        if: runner.os != 'Windows'
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifacts: "${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.tar.gz, src-tauri/target/${{ matrix.target.name }}/release/bundle/*"
 
   release-linux-aarch64:
     name: release-linux-aarch64
@@ -154,3 +189,18 @@ jobs:
           export PKG_CONFIG_SYSROOT_DIR=/usr/aarch64-linux-gnu/
           pnpm install
           pnpm tauri build --target aarch64-unknown-linux-gnu
+
+      - name: Package
+        run : |
+            mkdir -p ${{ github.workspace }}/release
+            cd src-tauri/target/${{ matrix.target.name }}/release
+            chmod +x AirISP-next
+            mkdir ${{ github.workspace }}/release/AirISP-next/
+            cp AirISP-next ${{ github.workspace }}/release/AirISP-next/
+            cd ${{ github.workspace }}/release
+            tar zcvf ${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.tar.gz AirISP-next
+      - name: "release"
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifacts: "${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.tar.gz, src-tauri/target/${{ matrix.target.name }}/release/bundle/*"
