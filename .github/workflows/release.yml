@@ -125,7 +125,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          artifacts: "${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.tar.gz, src-tauri/target/${{ matrix.target.name }}/release/bundle/*"
+          artifacts: "${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.tar.gz, src-tauri/target/${{ matrix.target.name }}/release/bundle/*/*"
 
   release-linux-aarch64:
     name: release-linux-aarch64
@@ -191,7 +191,7 @@ jobs:
         run : |
           cd src-tauri/target/${{ matrix.target.name }}/release
           mv air-isp-next AirISP-next
-          
+
       - name: Package
         run : |
             mkdir -p ${{ github.workspace }}/release
@@ -205,4 +205,4 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          artifacts: "${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.tar.gz, src-tauri/target/${{ matrix.target.name }}/release/bundle/*"
+          artifacts: "${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.tar.gz, src-tauri/target/${{ matrix.target.name }}/release/bundle/*/*"
