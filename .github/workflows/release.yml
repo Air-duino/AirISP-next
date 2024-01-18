@@ -95,7 +95,13 @@ jobs:
             cp AirISP-next.exe ${{ github.workspace }}/release/AirISP-next/
             cd ${{ github.workspace }}/release
             7z a -tzip ${{ github.workspace }}/AirISP-${{ github.ref_name }}-${{ matrix.target.file_name }}.zip AirISP-next
-
+      
+      - name: Linux rename
+        if: runner.os == 'Linux'
+        run : |
+          cd src-tauri/target/${{ matrix.target.name }}/release
+          mv air-isp-next AirISP-next
+  
       - name: Package
         if: runner.os != 'Windows'
         run : |
