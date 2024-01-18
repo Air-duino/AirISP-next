@@ -8,6 +8,7 @@ on:
 
 jobs:
   release:
+    name: Release
     permissions:
       contents: write
     strategy:
@@ -17,9 +18,9 @@ jobs:
           - name: x86_64-unknown-linux-gnu
             file_name : "linux-x86_64"
             os: ubuntu-22.04
-          - name: aarch64-unknown-linux-gnu
-            file_name : "linux-aarch64"
-            os: ubuntu-22.04
+          # - name: aarch64-unknown-linux-gnu
+          #   file_name : "linux-aarch64"
+          #   os: ubuntu-22.04
           
 #          - name: i686-pc-windows-msvc
 #            file_name : "windows-x86"
@@ -95,4 +96,50 @@ jobs:
         with:
           args: --target ${{ matrix.target.name }}
 
-  
+  release-linux-aarch64:
+    name: release-linux-aarch64
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        target: 
+          - name: aarch64-unknown-linux-gnu
+            file_name : "linux-aarch64"
+            os: ubuntu-22.04
+          
+    runs-on: ${{ matrix.target.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pguyot/arm-runner-action@v2
+        with:
+          base_image: raspios_lite_arm64:latest
+          cpu: cortex-a53
+          bind_mount_repository: true
+          image_additional_mb: 10240
+          optimize_image: false
+          commands: |
+            # Rust complains (rightly) that $HOME doesn't match eid home
+            export HOME=/root
+            # Workaround to CI worker being stuck on Updating crates.io index
+            export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
+            # Install setup prerequisites
+            apt-get update -y --allow-releaseinfo-change
+            apt-get upgrade -y
+            apt-get autoremove -y
+            apt-get install curl
+            curl https://sh.rustup.rs -sSf | sh -s -- -y
+            . "$HOME/.cargo/env"
+            curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash
+            # Install framework specific packages
+            apt-get install -y nodejs
+            curl -fsSL https://get.pnpm.io/install.sh | sh -
+            # Install build tools and tauri-cli requirements
+            apt-get install -y libwebkit2gtk-4.0-dev build-essential wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+            # cargo install tauri-cli
+            # Install frontend dependencies
+            npm install
+            # Build the application
+            pnpm tauri build
+      
