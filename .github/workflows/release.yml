@@ -186,6 +186,12 @@ jobs:
           pnpm install
           pnpm tauri build --target aarch64-unknown-linux-gnu
 
+      - name: Linux rename
+        if: runner.os == 'Linux'
+        run : |
+          cd src-tauri/target/${{ matrix.target.name }}/release
+          mv air-isp-next AirISP-next
+          
       - name: Package
         run : |
             mkdir -p ${{ github.workspace }}/release
