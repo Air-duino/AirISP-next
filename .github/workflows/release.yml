@@ -112,35 +112,39 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: pguyot/arm-runner-action@v2
+      - name: Rust setup
+        uses: dtolnay/rust-toolchain@stable
         with:
-          base_image: raspios_lite_arm64:latest
-          cpu: cortex-a53
-          # bind_mount_repository: true
-          image_additional_mb: 10240
-          optimize_image: false
-          commands: |
-            # Rust complains (rightly) that $HOME doesn't match eid home
-            export HOME=/root
-            # Workaround to CI worker being stuck on Updating crates.io index
-            export CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
-            # Install setup prerequisites
-            apt-get update -y --allow-releaseinfo-change
-            apt-get upgrade -y
-            apt-get autoremove -y
-            apt-get install curl
-            curl https://sh.rustup.rs -sSf | sh -s -- -y
-            . "$HOME/.cargo/env"
-            curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash
-            # Install framework specific packages
-            apt-get install -y nodejs
-            npm install -g pnpm
-            # Install build tools and tauri-cli requirements
-            apt-get install -y libwebkit2gtk-4.0-dev build-essential wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
-            # cargo install tauri-cli
-            # Install frontend dependencies
-            export GITHUB_EVENT_PATH=""
-            pnpm install
-            # Build the application
-            pnpm tauri build
+          targets: ${{ matrix.target.name }}
       
+      - uses: pnpm/action-setup@v2
+        with:
+          version: latest
+      
+      - name: Sync node version and setup cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'pnpm' # Set this to npm, yarn or pnpm.
+      - run: pnpm install
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target.name }}
+
+      - run: |
+          sudo apt-get update
+          sudo apt-get install gcc-aarch64-linux-gnu -y
+          sudo dpkg --add-architecture arm64
+          sudo rm -rf /etc/apt/sources.list
+          sudo cp ./.ubuntu-22.04.source /etc/apt/sources.list
+          sudo apt-get update && sudo apt-get upgrade -y
+          sudo apt-get install -y libudev-dev libusb-1.0-0-dev libssl-dev pkg-config
+          sudo apt install libhidapi-dev -y
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libayatana-appindicator3-dev librsvg2-dev
+          sudo apt-get install -y libudev-dev:arm64 libusb-1.0-0-dev:arm64 libssl-dev:arm64
+          sudo apt-get install -y libgtk-3-dev:arm64 libwebkit2gtk-4.0-dev:arm64 libayatana-appindicator3-dev:arm64 librsvg2-dev:arm64
+          export PKG_CONFIG_SYSROOT_DIR=/usr/aarch64-linux-gnu/
+          pnpm install
+          pnpm tauri build --target aarch64-unknown-linux-gnu
