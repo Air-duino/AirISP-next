@@ -14,3 +14,11 @@ Since TypeScript cannot handle type information for `.vue` imports, they are shi
 2. Reload the VS Code window by running `Developer: Reload Window` from the command palette.
 
 You can learn more about Take Over mode [here](https://github.com/johnsoncodehk/volar/discussions/471).
+
+## Install
+- Arch Linux : [AUR airisp-next-git](https://aur.archlinux.org/packages/airisp-next-git)
+- Arch Linux : [taotieren/aur-repo airisp-next-git](https://github.com/taotieren/aur-repo)
+
+```bash
+yay -Syu airisp-next
+```
